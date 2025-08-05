@@ -1,0 +1,44 @@
+# Advanced tips for experienced players
+driving:
+  - title: 'Control Spin with Tee Height'
+    content: 'Lower tee heights promote lower ball flight with more roll. Higher tees create higher launch with more carry. Adjust based on course conditions and wind.'
+    phase: 'during_round'
+    skill_level: 'advanced'
+
+  - title: 'Work the Ball Both Ways'
+    content: 'Learn to hit controlled draws and fades. Aim your body where you want the ball to start, aim the clubface where you want it to finish.'
+    phase: 'during_round'
+    skill_level: 'advanced'
+
+putting:
+  - title: 'Read Grain in the Greens'
+    content: 'On Bermuda grass, putts break less into the grain and more with the grain. Look for the shiny vs dull appearance to identify grain direction.'
+    phase: 'during_round'
+    skill_level: 'advanced'
+
+  - title: 'Use Your Feet to Read Slopes'
+    content: 'As you walk to your ball, feel the slope with your feet. Your body naturally senses inclines that your eyes might miss.'
+    phase: 'during_round'
+    skill_level: 'advanced'
+
+short_game:
+  - title: 'Master the Flop Shot'
+    content: 'Open the clubface dramatically, aim left of target, and accelerate through with an out-to-in swing path. Practice this shot extensively before attempting on course.'
+    phase: 'during_round'
+    skill_level: 'advanced'
+
+  - title: 'Spin Control with Wedges'
+    content: 'Clean grooves and a steep angle of attack create backspin. For less spin, use a shallower approach or choose a less lofted club.'
+    phase: 'during_round'
+    skill_level: 'advanced'
+
+course_management:
+  - title: 'Play to Your Miss'
+    content: 'Know your typical miss pattern and aim away from trouble accordingly. If you typically fade, aim down the left side of fairways.'
+    phase: 'during_round'
+    skill_level: 'advanced'
+
+  - title: 'Course Conditions Change Strategy'
+    content: 'Firm conditions: land short and let it run. Soft conditions: fly it to the pin. Adjust your targets based on how the course is playing.'
+    phase: 'during_round'
+    skill_level: 'advanced'

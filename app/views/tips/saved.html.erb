@@ -1,0 +1,69 @@
+<div class="min-h-screen bg-dark-bg pb-20">
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-dark-bg/95 backdrop-blur-sm border-b border-dark-border">
+    <div class="px-6 py-4">
+      <div class="flex items-center">
+        <%= link_to tips_path, class: "mr-4" do %>
+          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        <% end %>
+        <h1 class="text-title">Saved Tips</h1>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="px-6 py-6">
+    <% if @saved_tips.any? %>
+      <div class="space-y-4">
+        <% @saved_tips.each do |tip| %>
+          <div id="saved-tip-<%= tip.id %>" class="bg-dark-card rounded-2xl p-6 border border-dark-border">
+            <!-- Category & Phase -->
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
+                <%= tip.category.name %>
+              </span>
+              <span class="text-caption">
+                <%= tip_phase_icon(tip.phase) %> <%= tip.phase.humanize %>
+              </span>
+            </div>
+
+            <!-- Content -->
+            <h3 class="text-heading mb-2"><%= tip.title %></h3>
+            <p class="text-body mb-4"><%= truncate(tip.content, length: 150) %></p>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3 text-caption">
+                <span>By <%= tip.user.display_name %></span>
+                <span>•</span>
+                <span><%= time_ago_in_words(tip.created_at) %> ago</span>
+              </div>
+
+              <button class="text-red-400 hover:text-red-300 transition-colors text-sm"
+                      data-turbo-method="delete"
+                      data-turbo-action="replace"
+                      data-href="<%= unsave_tip_path(tip) %>">
+                Remove
+              </button>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <!-- Empty state -->
+      <div class="text-center py-12">
+        <div class="golf-ball-orb w-24 h-24 mb-6 opacity-50">
+          <div class="golf-ball-dimples"></div>
+        </div>
+        <h3 class="text-heading mb-2">No saved tips yet</h3>
+        <p class="text-body mb-6">
+          Start exploring tips and save the ones<br>
+          that resonate with your game.
+        </p>
+        <%= link_to "Browse Tips", tips_path, class: "btn-primary inline-block" %>
+      </div>
+    <% end %>
+  </main>
+</div>

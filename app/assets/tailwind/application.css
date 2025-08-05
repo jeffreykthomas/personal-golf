@@ -1,0 +1,191 @@
+@import 'tailwindcss';
+
+:root {
+  /* Golf Green Colors */
+  --color-golf-green-50: #f0fdf4;
+  --color-golf-green-500: #22c55e;
+  --color-golf-green-600: #16a34a;
+  --color-golf-green-700: #15803d;
+
+  /* Dark Theme Colors */
+  --color-dark-bg: #000000;
+  --color-dark-surface: #1a1a1a;
+  --color-dark-card: #262626;
+  --color-dark-border: #2a2a2a;
+  --color-dark-text: #f5f5f5;
+  --color-dark-text-muted: #a3a3a3;
+
+  /* Accent Colors */
+  --color-accent-blue: #3b82f6;
+  --color-accent-amber: #f59e0b;
+  --color-warning-red: #ef4444;
+}
+
+/* Components */
+@layer components {
+  /* Golf Ball Orb Component */
+  .golf-ball-orb {
+    position: relative;
+    width: 10rem;
+    height: 10rem;
+    margin: 0 auto 2rem;
+    background: radial-gradient(circle at 30% 30%, #ffffff, #e5e7eb);
+    border-radius: 50%;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1), 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .golf-ball-dimples {
+    position: absolute;
+    inset: 0;
+    opacity: 0.2;
+    background-image: radial-gradient(circle at 20% 80%, #000 1px, transparent 1px),
+      radial-gradient(circle at 80% 20%, #000 1px, transparent 1px),
+      radial-gradient(circle at 40% 40%, #000 1px, transparent 1px);
+    background-size: 15px 15px, 18px 18px, 12px 12px;
+  }
+
+  /* Card Utilities */
+  .card-dark {
+    background-color: var(--color-dark-card);
+    border-color: var(--color-dark-border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border-width: 1px;
+  }
+
+  /* Button Utilities */
+  .btn-primary {
+    background-color: #22c55e;
+    color: #111827;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    transition: background-color 0.15s;
+
+    &:hover {
+      background-color: #16a34a;
+    }
+  }
+
+  .btn-secondary {
+    background-color: var(--color-dark-surface);
+    border-color: var(--color-dark-border);
+    border-width: 1px;
+    color: white;
+    font-weight: 500;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    transition: background-color 0.15s;
+
+    &:hover {
+      background-color: #1f2937;
+    }
+  }
+}
+
+/* Custom Utilities */
+@layer utilities {
+  /* Typography Utilities */
+  .text-hero {
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: white;
+  }
+
+  .text-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+  }
+
+  .text-heading {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: white;
+  }
+
+  .text-body {
+    font-size: 1rem;
+    color: #d1d5db;
+  }
+
+  .text-caption {
+    font-size: 0.875rem;
+    color: #9ca3af;
+  }
+
+  .text-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Focus Ring Utility */
+  .focus-ring {
+    outline: none;
+
+    &:focus {
+      box-shadow: 0 0 0 2px var(--color-dark-bg), 0 0 0 4px #22c55e;
+    }
+  }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Swipe hint flash animation */
+@keyframes flash-once {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  80% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+}
+
+.swipe-hint-flash {
+  animation: flash-once 2s ease-out forwards;
+}
+
+/* Dark theme by default */
+html {
+  background-color: var(--color-dark-bg);
+  color: var(--color-dark-text);
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-dark-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-dark-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #525252;
+}

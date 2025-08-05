@@ -1,0 +1,102 @@
+<div class="min-h-screen bg-dark-bg">
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-dark-bg/95 backdrop-blur-sm border-b border-dark-border">
+    <div class="px-6 py-4">
+      <div class="flex items-center justify-between">
+        <h1 class="text-title">Personal Golf</h1>
+        
+        <!-- Profile & Menu -->
+        <div class="flex items-center space-x-4">
+          <button class="p-2 rounded-full hover:bg-dark-surface transition-colors">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </button>
+          
+          <%= link_to saved_tips_path, class: "relative p-2 rounded-full hover:bg-dark-surface transition-colors" do %>
+            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v13.586l-6-6-6 6V4z"/>
+            </svg>
+            <% if @tips.any? %>
+              <span class="absolute -top-1 -right-1 w-5 h-5 bg-golf-green-500 rounded-full text-xs text-dark-bg font-medium flex items-center justify-center">
+                <%= @tips.count %>
+              </span>
+            <% end %>
+          <% end %>
+          
+          <div class="w-10 h-10 bg-golf-green-500 rounded-full flex items-center justify-center">
+            <span class="text-dark-bg font-semibold text-sm">
+              <%= current_user.display_name.first.upcase %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content area -->
+  <main class="px-6 py-8">
+    <% if @next_tip %>
+      <!-- Tip display area -->
+      <div id="tip-display" class="max-w-md mx-auto">
+        <%= render partial: "tips/swipeable_tip_card", locals: { tip: @next_tip } %>
+      </div>
+    <% else %>
+      <!-- No more tips -->
+      <div class="max-w-md mx-auto text-center py-12">
+        <%= render partial: "tips/no_more_tips" %>
+      </div>
+    <% end %>
+
+    <!-- Quick stats -->
+    <div class="max-w-md mx-auto mt-8 grid grid-cols-3 gap-4">
+      <div class="bg-dark-card rounded-xl p-4 text-center">
+        <p class="text-2xl font-bold text-white"><%= @tips.count %></p>
+        <p class="text-caption">Tips Saved</p>
+      </div>
+      
+      <div class="bg-dark-card rounded-xl p-4 text-center">
+        <p class="text-2xl font-bold text-white"><%= current_user.handicap || "—" %></p>
+        <p class="text-caption">Handicap</p>
+      </div>
+      
+      <div class="bg-dark-card rounded-xl p-4 text-center">
+        <p class="text-2xl font-bold text-white"><%= current_user.tips_viewed_count %></p>
+        <p class="text-caption">Tips Viewed</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom navigation -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-dark-surface border-t border-dark-border">
+    <div class="grid grid-cols-4 gap-1">
+      <%= link_to tips_path, class: "flex flex-col items-center py-3 text-golf-green-500" do %>
+        <svg class="w-5 h-5 mb-1" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+        </svg>
+        <span class="text-xs">Home</span>
+      <% end %>
+      
+      <%= link_to categories_path, class: "flex flex-col items-center py-3 text-gray-400 hover:text-white transition-colors" do %>
+        <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+        <span class="text-xs">Browse</span>
+      <% end %>
+      
+      <button class="flex flex-col items-center py-3 text-gray-400 hover:text-white transition-colors">
+        <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        <span class="text-xs">Add Tip</span>
+      </button>
+      
+      <button class="flex flex-col items-center py-3 text-gray-400 hover:text-white transition-colors">
+        <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        <span class="text-xs">Profile</span>
+      </button>
+    </div>
+  </nav>
+</div>

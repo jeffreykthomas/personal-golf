@@ -1,0 +1,25 @@
+# Template for creating more tip files
+# Copy this file and rename to add more tips (e.g., tips_putting_advanced.yml)
+
+# STRUCTURE:
+# category_slug:
+#   - title: "Tip Title (5-100 characters)"
+#     content: "Detailed tip content (10-1000 characters)"
+#     phase: "pre_round|during_round|post_round"  # Only these 3 values are valid
+#     skill_level: "beginner|intermediate|advanced"
+
+# EXAMPLE:
+# putting:
+#   - title: "Your Tip Title Here"
+#     content: "Your detailed tip content here. Make it actionable and specific."
+#     phase: "during_round"
+#     skill_level: "beginner"
+
+# CATEGORIES AVAILABLE:
+# - basics
+# - driving
+# - putting
+# - short_game (maps to short-game slug)
+# - mental_game (maps to mental-game slug)
+# - course_management (maps to course-management slug)
+# - practice

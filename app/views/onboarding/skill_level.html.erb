@@ -1,0 +1,98 @@
+<div class="min-h-screen bg-dark-bg px-6 py-12"
+     data-controller="skill-selector">
+
+  <div class="max-w-md mx-auto">
+    <!-- Back button -->
+    <%= link_to onboarding_welcome_path, 
+        class: "inline-flex items-center text-gray-400 hover:text-white mb-8 transition-colors" do %>
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Back
+    <% end %>
+
+    <h2 class="text-title mb-2 text-center">What's your skill level?</h2>
+    <p class="text-body text-center mb-8">We'll personalize tips for your game</p>
+
+    <%= form_with model: @user, 
+        url: onboarding_skill_level_path, 
+        method: :patch,
+        local: false,
+        data: { 
+          controller: "form-submission",
+          action: "submit->form-submission#submit"
+        } do |f| %>
+
+      <!-- Name field -->
+      <div class="mb-6">
+        <%= f.label :name, "What should we call you?", class: "block text-label mb-2" %>
+        <%= f.text_field :name, 
+            placeholder: "Your name",
+            class: "w-full bg-dark-surface border border-dark-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus-ring",
+            autofocus: true %>
+      </div>
+
+      <!-- Skill level options -->
+      <div class="space-y-4 mb-8">
+        <p class="text-label mb-4">Select your level</p>
+        
+        <% User.skill_levels.keys.each do |level| %>
+          <label class="block cursor-pointer">
+            <%= f.radio_button :skill_level, level, 
+                class: "sr-only peer",
+                data: { 
+                  action: "change->skill-selector#selectLevel",
+                  skill_selector_target: "radio"
+                } %>
+            
+            <div class="w-full bg-dark-card border border-dark-border rounded-2xl p-6 transition-all duration-300 hover:border-golf-green-500/50 peer-checked:border-golf-green-500 peer-checked:bg-dark-surface">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-heading mb-1"><%= level.humanize %></h3>
+                  <p class="text-caption">
+                    <% case level %>
+                    <% when 'beginner' %>
+                      New to golf or playing for less than 2 years
+                    <% when 'intermediate' %>
+                      Regular player, handicap 15-25
+                    <% when 'advanced' %>
+                      Low handicap player, competing regularly
+                    <% end %>
+                  </p>
+                </div>
+                
+                <!-- Selection indicator -->
+                <div class="w-6 h-6 border-2 border-gray-500 rounded-full flex items-center justify-center peer-checked:border-golf-green-500">
+                  <div class="w-3 h-3 bg-golf-green-500 rounded-full hidden peer-checked:block"></div>
+                </div>
+              </div>
+            </div>
+          </label>
+        <% end %>
+      </div>
+
+      <!-- Handicap field (optional) -->
+      <div class="mb-8">
+        <%= f.label :handicap, "Handicap (optional)", class: "block text-label mb-2" %>
+        <%= f.number_field :handicap, 
+            placeholder: "Enter your handicap",
+            min: 0,
+            max: 54,
+            class: "w-full bg-dark-surface border border-dark-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus-ring" %>
+        <p class="text-caption mt-1">If you have an official handicap</p>
+      </div>
+
+      <!-- Continue button -->
+      <%= f.submit "Continue", 
+          class: "w-full btn-primary cursor-pointer",
+          data: { skill_selector_target: "submitButton" } %>
+    <% end %>
+
+    <!-- Progress indicator -->
+    <div class="flex justify-center space-x-2 mt-8">
+      <div class="w-3 h-3 bg-gray-600 rounded-full"></div>
+      <div class="w-3 h-3 bg-golf-green-500 rounded-full"></div>
+      <div class="w-3 h-3 bg-gray-600 rounded-full"></div>
+    </div>
+  </div>
+</div>

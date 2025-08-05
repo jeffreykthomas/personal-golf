@@ -1,0 +1,52 @@
+<div class="text-center py-12 fade-in">
+  <!-- Golf ball animation -->
+  <div class="golf-ball-orb w-32 h-32 mb-6">
+    <div class="golf-ball-dimples"></div>
+    <div class="absolute inset-0 flex items-center justify-center">
+      <svg class="w-12 h-12 text-golf-green-500" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+      </svg>
+    </div>
+  </div>
+
+  <h3 class="text-title mb-2">All caught up!</h3>
+  <p class="text-body mb-6 max-w-xs mx-auto">
+    You've seen all available tips for your skill level. Great job staying on top of your game!
+  </p>
+
+  <div class="space-y-3">
+    <!-- AI Generation Button -->
+    <button 
+      id="generate-ai-tips-btn"
+      data-action="click->ai-generation#requestTips"
+      class="btn-primary inline-block"
+      data-controller="ai-generation"
+    >
+      🤖 Generate Personalized Tips
+    </button>
+    
+    <%= link_to saved_tips_path, class: "btn-secondary inline-block" do %>
+      Review Your Saved Tips
+    <% end %>
+    
+    <p class="text-caption" id="ai-status-message">
+      AI can create tips just for you based on your progress!
+    </p>
+  </div>
+
+  <!-- Fun stats -->
+  <div class="mt-8 p-4 bg-dark-card rounded-xl border border-dark-border max-w-xs mx-auto">
+    <p class="text-caption mb-2">Your progress today</p>
+    <div class="flex items-center justify-around">
+      <div class="text-center">
+        <p class="text-2xl font-bold text-golf-green-500"><%= current_user.tips_viewed_count %></p>
+        <p class="text-xs text-gray-400">Tips viewed</p>
+      </div>
+      <div class="w-px h-8 bg-dark-border"></div>
+      <div class="text-center">
+        <p class="text-2xl font-bold text-golf-green-500"><%= current_user.saved_tips.count %></p>
+        <p class="text-xs text-gray-400">Tips saved</p>
+      </div>
+    </div>
+  </div>
+</div>

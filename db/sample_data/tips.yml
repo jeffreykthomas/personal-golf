@@ -1,0 +1,81 @@
+basics:
+  - title: 'Master Your Grip Pressure'
+    content: "Hold the club like you're holding a tube of toothpaste with the cap off - firm enough to control it, but gentle enough not to squeeze any out. This promotes better club control and more consistent shots."
+    phase: 'during_round'
+    skill_level: 'beginner'
+
+  - title: 'Perfect Your Posture'
+    content: 'Stand tall with your chest out and shoulders back. Your weight should be evenly distributed on the balls of your feet. Good posture is the foundation of a consistent golf swing.'
+    phase: 'during_round'
+    skill_level: 'beginner'
+
+  - title: 'Ball Position Basics'
+    content: 'For irons, position the ball in the center of your stance. For drivers, position it just inside your left heel. Consistent ball position leads to more consistent contact.'
+    phase: 'during_round'
+    skill_level: 'beginner'
+
+driving:
+  - title: 'Tee Height for Distance'
+    content: 'For drivers, tee the ball so half the ball is above the crown of your club. This promotes an upward angle of attack for maximum distance and carry.'
+    phase: 'during_round'
+    skill_level: 'intermediate'
+
+  - title: 'The 70% Rule for Club Selection'
+    content: 'Choose the club that will get you to your target with a 70% swing. This promotes better contact and accuracy compared to trying to hit every shot at maximum effort.'
+    phase: 'during_round'
+    skill_level: 'intermediate'
+
+putting:
+  - title: 'Read Putts from Behind the Hole'
+    content: 'Always read your putt from behind the hole looking back to your ball. This gives you the best perspective on the overall slope and helps you see the break more clearly.'
+    phase: 'during_round'
+    skill_level: 'beginner'
+
+  - title: 'Speed Control with Pendulum Motion'
+    content: 'Focus on a smooth pendulum motion with your putting stroke. The length of your backswing should match your follow-through for consistent speed control.'
+    phase: 'during_round'
+    skill_level: 'intermediate'
+
+short_game:
+  - title: 'Accelerate Through Impact'
+    content: 'On chips and pitches, always accelerate through the ball. A common mistake is decelerating, which leads to chunked or thin shots. Take a shorter backswing and accelerate through.'
+    phase: 'during_round'
+    skill_level: 'intermediate'
+
+  - title: 'Use Your Bounce in Bunkers'
+    content: 'In greenside bunkers, open your clubface and use the bounce of your sand wedge. Hit the sand 2 inches behind the ball and let the club do the work.'
+    phase: 'during_round'
+    skill_level: 'advanced'
+
+mental_game:
+  - title: 'Pre-Shot Routine is Key'
+    content: "Develop a consistent pre-shot routine that takes the same amount of time for every shot. This helps calm nerves and ensures you're properly aligned and focused before each swing."
+    phase: 'during_round'
+    skill_level: 'beginner'
+
+  - title: 'Visualize Success'
+    content: "Before each shot, visualize the ball's flight path and where you want it to land. This mental rehearsal programs your subconscious for success."
+    phase: 'during_round'
+    skill_level: 'intermediate'
+
+course_management:
+  - title: 'Aim Small, Miss Small'
+    content: "Pick a specific target for every shot - not just 'the fairway' but a specific tree, bunker edge, or spot. The more precise your target, the more accurate your shots will be."
+    phase: 'during_round'
+    skill_level: 'intermediate'
+
+  - title: 'Tee It Forward for More Fun'
+    content: "Don't let ego dictate your tee selection. Playing from tees that match your driving distance (not your aspirations) leads to more enjoyable rounds and better scoring opportunities."
+    phase: 'pre_round'
+    skill_level: 'beginner'
+
+practice:
+  - title: 'Warm Up with Purpose'
+    content: 'Start your warm-up with short chips and pitches, then work up through your bag. This ensures your body is properly warmed up and helps dial in your feel for the day.'
+    phase: 'pre_round'
+    skill_level: 'beginner'
+
+  - title: 'Practice with Alignment Sticks'
+    content: 'Use alignment sticks or clubs on the ground during practice to ensure proper setup and swing path. Visual feedback accelerates improvement.'
+    phase: 'pre_round'
+    skill_level: 'beginner'

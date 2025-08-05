@@ -1,0 +1,123 @@
+<!-- app/views/tips/_swipeable_tip_card.html.erb -->
+<div class="tip-card-container relative overflow-hidden"
+     data-controller="swipeable-tip"
+     data-swipeable-tip-tip-id-value="<%= tip.id %>"
+     data-swipeable-tip-threshold-value="100">
+
+  <!-- Swipe indicators (hidden by default) -->
+  <div class="absolute inset-0 flex pointer-events-none">
+    <!-- Left swipe indicator (Skip) -->
+    <div class="flex-1 bg-red-500/20 flex items-center justify-start pl-8 transition-opacity duration-200 opacity-0"
+         data-swipeable-tip-target="leftIndicator">
+      <div class="flex flex-col items-center text-red-400">
+        <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        <span class="text-xs font-medium">Skip</span>
+      </div>
+    </div>
+
+    <!-- Right swipe indicator (Save) -->
+    <div class="flex-1 bg-golf-green-500/20 flex items-center justify-end pr-8 transition-opacity duration-200 opacity-0"
+         data-swipeable-tip-target="rightIndicator">
+      <div class="flex flex-col items-center text-golf-green-500">
+        <svg class="w-8 h-8 mb-2" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v13.586l-6-6-6 6V4z"/>
+        </svg>
+        <span class="text-xs font-medium">Save</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main tip card -->
+  <div class="bg-dark-card rounded-2xl p-6 border border-dark-border transition-transform duration-200"
+       data-swipeable-tip-target="card"
+       data-action="touchstart->swipeable-tip#handleTouchStart
+                    touchmove->swipeable-tip#handleTouchMove
+                    touchend->swipeable-tip#handleTouchEnd
+                    click->swipeable-tip#handleTap">
+
+    <!-- Tip content -->
+    <div class="mb-6">
+      <!-- User info -->
+      <div class="flex items-center space-x-3 mb-4">
+        <div class="w-10 h-10 bg-golf-green-500 rounded-full flex items-center justify-center">
+          <span class="text-dark-bg font-semibold text-sm">
+            <%= tip.user.display_name.first.upcase %>
+          </span>
+        </div>
+        <div>
+          <p class="text-white font-medium text-sm"><%= tip.user.display_name %></p>
+          <p class="text-caption"><%= time_ago_in_words(tip.created_at) %> ago</p>
+        </div>
+      </div>
+
+      <!-- Tip content -->
+      <h3 class="text-heading mb-3"><%= tip.title %></h3>
+      <p class="text-body leading-relaxed"><%= simple_format(tip.content) %></p>
+    </div>
+
+    <!-- Category tags -->
+    <div class="flex flex-wrap gap-2 mb-6">
+      <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
+        <%= tip.category.name %>
+      </span>
+      <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
+        <%= tip.phase.humanize %>
+      </span>
+    </div>
+
+    <!-- Button fallbacks (always visible for accessibility) -->
+    <div class="flex justify-between items-center">
+      <button class="flex items-center space-x-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors"
+              data-action="click->swipeable-tip#skip"
+              aria-label="Skip this tip">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        <span class="text-sm">Skip</span>
+      </button>
+
+      <div class="flex items-center space-x-3">
+        <!-- Save count -->
+        <div class="flex items-center space-x-1 text-gray-400">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v13.586l-6-6-6 6V4z"/>
+          </svg>
+          <span class="text-sm"><%= tip.save_count %></span>
+        </div>
+
+        <!-- Share button -->
+        <button class="p-2 rounded-full hover:bg-dark-surface transition-colors"
+                data-action="click->swipeable-tip#share"
+                aria-label="Share this tip">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"/>
+          </svg>
+        </button>
+
+        <!-- Save button -->
+        <button class="flex items-center space-x-2 px-4 py-2 rounded-xl bg-golf-green-500 hover:bg-golf-green-600 text-dark-bg font-medium transition-colors"
+                data-action="click->swipeable-tip#save"
+                aria-label="Save this tip to your collection">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v13.586l-6-6-6 6V4z"/>
+          </svg>
+          <span class="text-sm">Save</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Swipe instruction hint (show for first few tips) -->
+    <% if should_show_swipe_hint?(current_user) && !session[:swipe_hint_shown] %>
+      <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-dark-surface/90 backdrop-blur-sm rounded-full px-6 py-3 border border-dark-border swipe-hint-flash"
+           data-swipeable-tip-target="hint"
+           data-controller="swipe-hint">
+        <p class="text-sm font-medium text-center">
+          👈 Swipe left to skip • Swipe right to save 👉
+        </p>
+      </div>
+      <% session[:swipe_hint_shown] = true %>
+    <% end %>
+  </div>
+</div>

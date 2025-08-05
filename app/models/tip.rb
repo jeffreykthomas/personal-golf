@@ -6,6 +6,7 @@ class Tip < ApplicationRecord
 
   validates :title, presence: true, length: { minimum: 5, maximum: 100 }
   validates :content, presence: true, length: { minimum: 10, maximum: 1000 }
+  validates :youtube_url, format: { with: /\A(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}(\?.*)?\z/, allow_blank: true }
 
   enum :phase, { pre_round: 0, during_round: 1, post_round: 2 }
   enum :skill_level, { beginner: 0, intermediate: 1, advanced: 2 }
@@ -30,6 +31,35 @@ class Tip < ApplicationRecord
     ai_penalty = ai_generated? ? 10 : 0
 
     base_score - age_penalty + popularity_bonus - ai_penalty
+  end
+
+  def youtube_video_id
+    return nil unless youtube_url.present?
+    
+    # Extract video ID from various YouTube URL formats
+    patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/
+    ]
+    
+    patterns.each do |pattern|
+      match = youtube_url.match(pattern)
+      return match[1] if match
+    end
+    
+    nil
+  end
+
+  def youtube_thumbnail_url
+    video_id = youtube_video_id
+    return nil unless video_id
+    
+    "https://img.youtube.com/vi/#{video_id}/maxresdefault.jpg"
+  end
+
+  def has_youtube_video?
+    youtube_video_id.present?
   end
 
   private

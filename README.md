@@ -6,6 +6,7 @@ A Progressive Web App (PWA) built with **Ruby on Rails 8** that helps golfers or
 
 - **Personal Knowledge Collection**: Save and organize golf tips across all categories
 - **AI-Powered Content**: Generate personalized tips using Google Gemini API
+- **YouTube Integration**: Tips can include relevant instructional videos with thumbnails
 - **Community-Driven**: Share knowledge and discover tips from other golfers
 - **Course-Specific Insights**: Local knowledge and photos for golf courses
 - **Progressive Web App**: Works offline, installable on mobile devices

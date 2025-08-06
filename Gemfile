@@ -28,7 +28,7 @@ gem "omniauth-google-oauth2"
 gem "omniauth-rails_csrf_protection"
 
 # AI integration - Official Google Cloud gem
-gem "google-cloud-ai_platform"
+gem "google-cloud-ai_platform", "~> 2.0.1"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
@@ -68,3 +68,9 @@ group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
 end
+
+gem "dockerfile-rails", ">= 1.7", :group => :development
+
+gem "litestream", "~> 0.14.0"
+
+gem "aws-sdk-s3", "~> 1.196", :require => false

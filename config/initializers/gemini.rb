@@ -4,8 +4,11 @@
 # The official gem uses service account credentials or Application Default Credentials
 # No global configuration needed - handled per-client in GeminiService
 
-# Validate required credentials are present
+# Validate required credentials are present (skip during Docker build)
 Rails.application.config.after_initialize do
+  # Skip validation during Docker build
+  next if ENV['SECRET_KEY_BASE_DUMMY']
+  
   unless Rails.application.credentials.google_cloud_project_id
     Rails.logger.warn "Missing google_cloud_project_id in credentials - AI features may not work"
   end

@@ -17,6 +17,22 @@ class Tip < ApplicationRecord
   scope :popular, -> { order(save_count: :desc) }
   scope :recent, -> { order(created_at: :desc) }
 
+  scope :order_by_phase, -> { order(phase: :asc) }
+  scope :order_by_category_distance, -> {
+    joins(:category).order(Arel.sql(<<~SQL.squish))
+      CASE categories.slug
+        WHEN 'mental-game' THEN 0
+        WHEN 'putting' THEN 1
+        WHEN 'short-game' THEN 2
+        WHEN 'driving' THEN 3
+        WHEN 'course-management' THEN 4
+        WHEN 'basics' THEN 5
+        WHEN 'practice' THEN 6
+        ELSE 7
+      END ASC
+    SQL
+  }
+
   after_create_commit :broadcast_new_tip
 
   def increment_save_count!

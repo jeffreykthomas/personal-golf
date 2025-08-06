@@ -49,7 +49,30 @@ class TipsController < ApplicationController
   end
 
   def saved
-    @saved_tips = current_user.saved_tip_items.includes(:category, :user).order(created_at: :desc)
+    @sort_by = params[:sort_by] || 'phase' # Default to timing
+    @saved_tips = current_user.saved_tip_items.includes(:category, :user)
+    
+    @saved_tips = case @sort_by
+                  when 'distance'
+                    @saved_tips.order_by_category_distance
+                  when 'newest'
+                    @saved_tips.order(created_at: :desc)
+                  when 'category'
+                    @saved_tips.joins(:category).order('categories.name ASC')
+                  else # Default to 'phase'
+                    @saved_tips.order_by_phase
+                  end
+    
+    respond_to do |format|
+      format.html
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "saved-tips",
+          partial: "tips/saved_tip_list",
+          locals: { saved_tips: @saved_tips }
+        )
+      end
+    end
   end
   
   def request_ai_tips

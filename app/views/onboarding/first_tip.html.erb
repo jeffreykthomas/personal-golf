@@ -33,6 +33,30 @@
       <!-- Tip content -->
       <h3 class="text-heading mb-3"><%= @first_tip.title %></h3>
       <p class="text-body leading-relaxed mb-6"><%= simple_format(@first_tip.content) %></p>
+      
+      <!-- YouTube video thumbnail if available -->
+      <% if @first_tip.has_youtube_video? %>
+        <div class="mb-6">
+          <a href="<%= @first_tip.youtube_url %>" target="_blank" rel="noopener noreferrer" class="block group">
+            <div class="relative rounded-lg overflow-hidden bg-dark-surface">
+              <img src="<%= @first_tip.youtube_thumbnail_url %>" 
+                   alt="YouTube video thumbnail" 
+                   class="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200"
+                   onerror="this.style.display='none'">
+              <div class="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
+                <div class="bg-red-600 rounded-full p-3 group-hover:scale-110 transition-transform">
+                  <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                Watch Video
+              </div>
+            </div>
+          </a>
+        </div>
+      <% end %>
 
       <!-- Visual indicator of success -->
       <div class="bg-golf-green-500/10 border border-golf-green-500/20 rounded-xl p-4 mb-6">

@@ -76,7 +76,8 @@ class GeminiService
       {
         "title": "Engaging title under 80 characters",
         "content": "Detailed tip with specific instructions under 800 characters",
-        "phase": "pre_round" | "during_round" | "post_round"
+        "phase": "pre_round" | "during_round" | "post_round",
+        "youtube_url": "Optional YouTube URL for a relevant instructional video (only include if highly relevant)"
       }
       
       Make the tip personal, practical, and immediately useful.
@@ -132,6 +133,12 @@ class GeminiService
     # Truncate if too long
     parsed['title'] = parsed['title'][0..99] if parsed['title'].length > 100
     parsed['content'] = parsed['content'][0..999] if parsed['content'].length > 1000
+    
+    # Validate YouTube URL if present
+    if parsed['youtube_url'].present?
+      youtube_pattern = /\A(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}(\?.*)?\z/
+      parsed['youtube_url'] = nil unless parsed['youtube_url'].match?(youtube_pattern)
+    end
     
     parsed.with_indifferent_access
   rescue JSON::ParserError => e

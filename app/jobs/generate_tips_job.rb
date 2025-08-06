@@ -117,6 +117,7 @@ class GenerateTipsJob < ApplicationJob
       category: category,
       phase: tip_data[:phase] || 'during_round',
       skill_level: user.skill_level || 'beginner',
+      youtube_url: tip_data[:youtube_url],
       ai_generated: true,
       published: true
     )

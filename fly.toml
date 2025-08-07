@@ -17,7 +17,7 @@ console_command = '/rails/bin/rails console'
 
 [[mounts]]
   source = 'data'
-  destination = '/data'
+  destination = '/rails/storage'
   processes = ['app']
 
 [http_service]

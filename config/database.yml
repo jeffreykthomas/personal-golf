@@ -23,20 +23,20 @@ test:
 
 # Store production database in the storage/ directory, which by default
 # is mounted as a persistent Docker volume in config/deploy.yml.
-# For Fly.io, use /data directory if FLY_APP_NAME is set
+# For Fly.io, we'll also use storage/ since /data requires root
 production:
   primary:
     <<: *default
-    database: <%= ENV['FLY_APP_NAME'] ? '/data/production.sqlite3' : 'storage/production.sqlite3' %>
+    database: storage/production.sqlite3
   cache:
     <<: *default
-    database: <%= ENV['FLY_APP_NAME'] ? '/data/production_cache.sqlite3' : 'storage/production_cache.sqlite3' %>
+    database: storage/production_cache.sqlite3
     migrations_paths: db/cache_migrate
   queue:
     <<: *default
-    database: <%= ENV['FLY_APP_NAME'] ? '/data/production_queue.sqlite3' : 'storage/production_queue.sqlite3' %>
+    database: storage/production_queue.sqlite3
     migrations_paths: db/queue_migrate
   cable:
     <<: *default
-    database: <%= ENV['FLY_APP_NAME'] ? '/data/production_cable.sqlite3' : 'storage/production_cable.sqlite3' %>
+    database: storage/production_cable.sqlite3
     migrations_paths: db/cable_migrate

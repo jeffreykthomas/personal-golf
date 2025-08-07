@@ -1,5 +1,7 @@
 # app/services/gemini_service.rb
 require 'google/cloud/ai_platform'
+require 'net/http'
+require 'uri'
 
 class GeminiService
   def self.generate_tip(user_profile:, category:, context: {})
@@ -85,18 +87,64 @@ class GeminiService
   end
   
   def self.vertex_ai_client
-    @client ||= Google::Cloud::AIPlatform.prediction_service do |config|
-      config.credentials = service_account_credentials
+    @client ||= begin
+      if ENV['GOOGLE_WORKLOAD_IDENTITY_AUDIENCE']
+        # Use Workload Identity Federation
+        require 'googleauth'
+
+        scope = 'https://www.googleapis.com/auth/cloud-platform'
+
+        # Get Fly.io token
+        fly_token = fetch_fly_token
+
+        # Exchange for Google token
+        authorizer = Google::Auth::ExternalAccount::Authorizer.new(
+          audience: ENV['GOOGLE_WORKLOAD_IDENTITY_AUDIENCE'],
+          subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
+          token_url: 'https://sts.googleapis.com/v1/token',
+          credential_source: {
+            format: {
+              type: 'json',
+              subject_token_field_name: 'token'
+            },
+            data: { token: fly_token }
+          },
+          service_account_impersonation_url: "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/#{ENV['GOOGLE_SERVICE_ACCOUNT_EMAIL']}:generateAccessToken",
+          scopes: [scope]
+        )
+
+        Google::Cloud::AIPlatform.prediction_service do |config|
+          config.credentials = authorizer
+        end
+      elsif Rails.application.credentials.google_service_account_key
+        # Fall back to service account key
+        Google::Cloud::AIPlatform.prediction_service do |config|
+          config.credentials = service_account_credentials
+        end
+      else
+        # Use Application Default Credentials
+        Google::Cloud::AIPlatform.prediction_service
+      end
     end
   end
   
   def self.model_endpoint
     # Vertex AI endpoint for Gemini Pro
-    project_id = Rails.application.credentials.google_cloud_project_id
+    project_id = ENV['GOOGLE_CLOUD_PROJECT'] || Rails.application.credentials.google_cloud_project_id
     region = 'us-central1' # or your preferred region
     model_id = 'gemini-pro'
     
     "projects/#{project_id}/locations/#{region}/publishers/google/models/#{model_id}"
+  end
+  
+  def self.fetch_fly_token
+    # Fly.io provides tokens at this endpoint
+    uri = URI('http://[::1]:3000/.fly/api/tokens/oidc')
+    response = Net::HTTP.get_response(uri)
+    response.body if response.is_a?(Net::HTTPSuccess)
+  rescue => e
+    Rails.logger.error "Failed to fetch Fly.io token: #{e.message}"
+    nil
   end
   
   def self.service_account_credentials

@@ -11,7 +11,7 @@ const PRECACHE_URLS = [
   '/icon.svg',
   '/sessions/new',
   '/users/new',
-  '/offline.html'
+  '/offline.html',
 ];
 
 // Cache strategies
@@ -27,33 +27,28 @@ const CACHE_STRATEGIES = {
     '.jpeg',
     '.svg',
     '.woff',
-    '.woff2'
+    '.woff2',
   ],
   // Network first for API and dynamic content
-  networkFirst: [
-    '/tips',
-    '/api/',
-    '/auth/',
-    '/sessions',
-    '/users'
-  ],
+  networkFirst: ['/tips', '/api/', '/auth/', '/sessions', '/users'],
   // Stale while revalidate for everything else
-  staleWhileRevalidate: [
-    '/'
-  ]
+  staleWhileRevalidate: ['/'],
 };
 
 // Install event - cache essential resources
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches
+      .open(CACHE_NAME)
       .then((cache) => {
         console.log('Caching essential resources');
-        return cache.addAll(PRECACHE_URLS.map(url => {
-          return new Request(url, { cache: 'reload' });
-        }).filter(request => {
-          return request.url.startsWith(self.location.origin);
-        }));
+        return cache.addAll(
+          PRECACHE_URLS.map((url) => {
+            return new Request(url, { cache: 'reload' });
+          }).filter((request) => {
+            return request.url.startsWith(self.location.origin);
+          })
+        );
       })
       .then(() => self.skipWaiting())
       .catch((error) => {
@@ -65,13 +60,18 @@ self.addEventListener('install', (event) => {
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((cacheName) => cacheName.startsWith('personal-golf-') && cacheName !== CACHE_NAME)
-          .map((cacheName) => caches.delete(cacheName))
-      );
-    }).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames
+            .filter(
+              (cacheName) => cacheName.startsWith('personal-golf-') && cacheName !== CACHE_NAME
+            )
+            .map((cacheName) => caches.delete(cacheName))
+        );
+      })
+      .then(() => self.clients.claim())
   );
 });
 
@@ -92,32 +92,31 @@ self.addEventListener('fetch', (event) => {
 
   // Determine cache strategy
   const path = url.pathname;
-  
+
   // Cache First Strategy (for static assets)
-  if (CACHE_STRATEGIES.cacheFirst.some(pattern => path.includes(pattern))) {
+  if (CACHE_STRATEGIES.cacheFirst.some((pattern) => path.includes(pattern))) {
     event.respondWith(
-      caches.match(request)
-        .then((response) => {
-          if (response) {
+      caches.match(request).then((response) => {
+        if (response) {
+          return response;
+        }
+        return fetch(request).then((response) => {
+          if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
-          return fetch(request).then((response) => {
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseToCache);
-            });
-            return response;
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
           });
-        })
+          return response;
+        });
+      })
     );
     return;
   }
 
   // Network First Strategy (for dynamic content)
-  if (CACHE_STRATEGIES.networkFirst.some(pattern => path.includes(pattern))) {
+  if (CACHE_STRATEGIES.networkFirst.some((pattern) => path.includes(pattern))) {
     event.respondWith(
       fetch(request)
         .then((response) => {
@@ -139,50 +138,55 @@ self.addEventListener('fetch', (event) => {
 
   // Stale While Revalidate (default strategy)
   event.respondWith(
-    caches.match(request)
-      .then((response) => {
-        const fetchPromise = fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+    caches.match(request).then((response) => {
+      const fetchPromise = fetch(request)
+        .then((networkResponse) => {
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            networkResponse.type === 'basic'
+          ) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, responseToCache);
             });
           }
           return networkResponse;
-        }).catch(() => {
+        })
+        .catch(() => {
           // If offline and no cache, show offline page
           if (request.mode === 'navigate') {
             return caches.match(OFFLINE_URL);
           }
         });
-        
-        return response || fetchPromise;
-      })
+
+      return response || fetchPromise;
+    })
   );
 });
 
 // Handle push notifications (if needed later)
-self.addEventListener("push", async (event) => {
-  const { title, options } = await event.data.json()
-  event.waitUntil(self.registration.showNotification(title, options))
-})
+self.addEventListener('push', async (event) => {
+  const { title, options } = await event.data.json();
+  event.waitUntil(self.registration.showNotification(title, options));
+});
 
-self.addEventListener("notificationclick", function(event) {
-  event.notification.close()
+self.addEventListener('notificationclick', function (event) {
+  event.notification.close();
   event.waitUntil(
-    clients.matchAll({ type: "window" }).then((clientList) => {
+    clients.matchAll({ type: 'window' }).then((clientList) => {
       for (let i = 0; i < clientList.length; i++) {
-        let client = clientList[i]
-        let clientPath = (new URL(client.url)).pathname
+        let client = clientList[i];
+        let clientPath = new URL(client.url).pathname;
 
-        if (clientPath == event.notification.data.path && "focus" in client) {
-          return client.focus()
+        if (clientPath == event.notification.data.path && 'focus' in client) {
+          return client.focus();
         }
       }
 
       if (clients.openWindow) {
-        return clients.openWindow(event.notification.data.path)
+        return clients.openWindow(event.notification.data.path);
       }
     })
-  )
-})
+  );
+});

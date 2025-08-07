@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Golf - Offline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 2rem;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 500px;
+        }
+        
+        .icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 2rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .status {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📵</div>
+        
+        <h1>You're Offline</h1>
+        <p>
+            It looks like you've lost your internet connection. 
+            Personal Golf needs an internet connection to load new tips and sync your progress.
+        </p>
+        
+        <button class="btn" onclick="checkConnection()">
+            Try Again
+        </button>
+        
+        <div class="status" id="status" style="display: none;">
+            Checking connection...
+        </div>
+    </div>
+    
+    <script>
+        function checkConnection() {
+            const statusEl = document.getElementById('status');
+            statusEl.style.display = 'block';
+            statusEl.textContent = 'Checking connection...';
+            
+            // Try to fetch a small resource
+            fetch('/manifest.json', { method: 'HEAD' })
+                .then(() => {
+                    statusEl.textContent = '✓ Connection restored! Redirecting...';
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                })
+                .catch(() => {
+                    statusEl.textContent = '✗ Still offline. Please check your connection.';
+                    setTimeout(() => {
+                        statusEl.style.display = 'none';
+                    }, 3000);
+                });
+        }
+        
+        // Auto-check every 5 seconds
+        setInterval(() => {
+            fetch('/manifest.json', { method: 'HEAD' })
+                .then(() => {
+                    window.location.href = '/';
+                })
+                .catch(() => {});
+        }, 5000);
+    </script>
+</body>
+</html>

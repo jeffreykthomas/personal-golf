@@ -1,5 +1,6 @@
 {
-  "name": "PersonalGolf",
+  "name": "Personal Golf",
+  "short_name": "Golf Tips",
   "icons": [
     {
       "src": "/icon.png",
@@ -16,7 +17,21 @@
   "start_url": "/",
   "display": "standalone",
   "scope": "/",
-  "description": "PersonalGolf.",
-  "theme_color": "red",
-  "background_color": "red"
+  "description": "AI-powered personalized golf tips to improve your game",
+  "theme_color": "#667eea",
+  "background_color": "#667eea",
+  "orientation": "portrait",
+  "categories": ["sports", "education"],
+  "shortcuts": [
+    {
+      "name": "New Tip",
+      "url": "/tips",
+      "description": "Get a new golf tip"
+    },
+    {
+      "name": "Saved Tips",
+      "url": "/tips/saved",
+      "description": "View your saved tips"
+    }
+  ]
 }

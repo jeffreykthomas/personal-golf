@@ -1,0 +1,17 @@
+<div class="saved-tips-header bg-white dark:bg-gray-800 p-4 shadow-md rounded-lg mb-4" data-controller="form-submission">
+  <div class="flex justify-between items-center">
+    <h2 class="text-xl font-bold text-gray-800 dark:text-white">Your Saved Tips</h2>
+    
+    <%= form_with url: saved_tips_path, method: :get, class: "flex items-center space-x-2", data: { form_submission_target: "form" } do |f| %>
+      <%= f.label :sort_by, "Sort by:", class: "text-sm font-medium text-gray-600 dark:text-gray-300" %>
+      <%= f.select :sort_by, 
+                   options_for_select(sort_options, @sort_by), 
+                   {}, 
+                   { 
+                     class: "p-2 border rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                     data: { action: "change->form-submission#submit" } 
+                   } %>
+      <%#= f.submit "Sort", class: "hidden" %>
+    <% end %>
+  </div>
+</div>

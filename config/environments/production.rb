@@ -7,7 +7,8 @@ Rails.application.configure do
   config.enable_reloading = false
 
   # Eager load code on boot for better performance and memory savings (ignored by Rake tasks).
-  config.eager_load = true
+  # Set to false for faster cold starts, at the cost of first-request performance
+  config.eager_load = ENV['EAGER_LOAD'] != 'false'
 
   # Full error reports are disabled.
   config.consider_all_requests_local = false

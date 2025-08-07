@@ -2,6 +2,13 @@
 # exit on error
 set -o errexit
 
+# Ensure /data directory exists and is writable
+if [ -d "/data" ]; then
+  echo "Setting up /data directory permissions..."
+  sudo chown -R rails:rails /data || echo "Warning: Could not change /data ownership"
+  sudo chmod 755 /data || echo "Warning: Could not change /data permissions"
+fi
+
 # Run database migrations
 bundle exec rails db:migrate
 

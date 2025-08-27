@@ -28,7 +28,7 @@ gem "omniauth-google-oauth2"
 gem "omniauth-rails_csrf_protection"
 
 # AI integration - Official Google Cloud gem
-gem "google-cloud-ai_platform", "~> 2.0.1"
+gem "google-cloud-ai_platform", "~> 2.1.0"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]

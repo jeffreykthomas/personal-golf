@@ -75,6 +75,29 @@ class TipsController < ApplicationController
     end
   end
   
+  def new
+    @tip = Tip.new
+    if params[:course_id].present? && params[:hole_number].present?
+      @tip.category = Category.find_by(slug: 'course-tip')
+      @tip.course_id = params[:course_id]
+      @tip.hole_number = params[:hole_number]
+    end
+    @courses = Course.order(:name)
+    @categories = Category.order(:name)
+  end
+
+  def create
+    @tip = current_user.tips.new(tip_params)
+    @tip.published = true
+    if @tip.save
+      redirect_to tips_path, notice: 'Tip created successfully.'
+    else
+      @courses = Course.order(:name)
+      @categories = Category.order(:name)
+      render :new, status: :unprocessable_entity
+    end
+  end
+  
   def request_ai_tips
     # Allow users to manually request tip generation
     tips_to_generate = params[:count]&.to_i || 5
@@ -178,5 +201,17 @@ class TipsController < ApplicationController
       
       Rails.logger.info "Queued generation of #{tips_to_generate} tips for user #{current_user.id} (#{available_tips_count} available)"
     end
+  end
+
+  def tip_params
+    permitted = params.require(:tip).permit(
+      :title, :content, :youtube_url, :phase, :skill_level,
+      :category_id, :course_id, :hole_number, tags: []
+    )
+    # Clean empty tags
+    if permitted[:tags].is_a?(Array)
+      permitted[:tags] = permitted[:tags].reject(&:blank?)
+    end
+    permitted
   end
 end

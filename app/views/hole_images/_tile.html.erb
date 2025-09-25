@@ -1,0 +1,27 @@
+<%# locals: image (course/hole locals optional). Use image.hole to resolve paths for broadcasts. %>
+<div id="hole_image_<%= image.id %>" class="aspect-square bg-white/5 rounded flex items-center justify-center text-white/30 overflow-hidden relative group">
+  <% if image.ready? && image.image.attached? %>
+    <% content_type = image.image.blob&.content_type.to_s %>
+    <% if content_type.start_with?('video/') %>
+      <div data-controller="video-player" data-action="click->video-player#openFullscreen" class="w-full h-full">
+        <video data-video-player-target="video" src="<%= url_for(image.image) %>" class="w-full h-full object-cover" playsinline muted preload="metadata"></video>
+      </div>
+    <% else %>
+      <%= image_tag image.image.variant(resize_to_fill: [300, 300]), class: 'w-full h-full object-cover' %>
+    <% end %>
+    <% if current_user && image.user_id == current_user.id %>
+      <%= button_to 'Delete', destroy_hole_image_course_path(image.hole.course, number: image.hole.number, image_id: image.id), method: :delete, form: { data: { turbo_confirm: 'Delete this image?' } }, class: 'absolute top-2 right-2 px-2 py-1 rounded bg-red-500/80 text-white text-xs opacity-0 group-hover:opacity-100 transition border border-red-300/50' %>
+    <% end %>
+  <% else %>
+    <div class="flex flex-col items-center gap-2 text-white/60">
+      <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <span class="text-xs">
+        <%= image.failed? ? 'Failed' : (image.processing? ? 'Processing…' : 'Pending…') %>
+      </span>
+    </div>
+  <% end %>
+</div>
+

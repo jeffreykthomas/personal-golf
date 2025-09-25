@@ -35,6 +35,21 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :courses, only: [:index, :show, :new, :create, :destroy] do
+    member do
+      post :generate_holes
+      get 'holes/:number', to: 'courses#hole', as: :hole
+      patch 'holes/:number', to: 'courses#update_hole', as: :update_hole
+      post 'holes/:number/tees', to: 'courses#create_hole_tee', as: :hole_tees
+      patch 'holes/:number/tees/:tee_id', to: 'courses#update_hole_tee', as: :hole_tee
+      delete 'holes/:number/tees/:tee_id', to: 'courses#destroy_hole_tee'
+      post 'holes/:number/upload_layout', to: 'courses#upload_layout', as: :upload_hole_layout
+      post 'holes/:number/images/:image_id/vote', to: 'courses#vote_image', as: :vote_hole_image
+      post 'holes/:number/images/:image_id/redo', to: 'courses#redo_stylization', as: :redo_hole_image
+      delete 'holes/:number/images/:image_id', to: 'courses#destroy_hole_image', as: :destroy_hole_image
+    end
+  end
+
   resources :categories, only: [:index, :show]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

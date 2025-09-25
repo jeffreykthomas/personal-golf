@@ -12,6 +12,22 @@ A Progressive Web App (PWA) built with **Ruby on Rails 8** that helps golfers or
 - **Progressive Web App**: Works offline, installable on mobile devices
 - **Real-time Updates**: Live sharing and notifications via Solid Cable
 
+## Tip Types & Examples
+
+- **Technical**: "Shallow the downswing by feeling the trail elbow lead the hips. Make 3 slow pump rehearsals, then swing at 80% to start the ball right-edge and draw back."
+- **Mental game**: "Use box-breathing (4-4-4-4) while picking a tiny intermediate target. After exhale, commit to one swing thought: tempo only."
+- **Preparation**: "Green-speed ladder drill: putt 10, 20, 30 feet stopping pin-high. Note the backstroke length that reliably reaches each distance and use it in the round."
+- **Course management**: "When approach > 7-iron or into the wind, aim for the fat side. Take one extra club and swing 80% to avoid the short-side miss—bogeys drop fast with this rule."
+- **Specific course**: "Example – Hole 4, 175y par 3, water front-left: tee to right-center; long is safe. On afternoon headwinds, take one more club and flight it down."
+
+### Available Tip Tags
+
+These tags can be attached to tips for filtering and discovery:
+
+- **Clubs**: driver, fairway_woods, long_irons, short_irons, wedges, putter
+- **Shots**: full_shots, punch_shots, hook_shots, slice_shots, fairway_bunker, pitches, chips, flop_shots, greenside_bunker, long_putts, short_putts
+- **Mental Game**: pre-shot_routine, visualization, breathing, focus, confidence, positive_self-talk, commitment, acceptance, emotional_control, routine_under_pressure, post-shot_processing
+
 ## 🚀 Rails 8 "No PaaS Required" Architecture
 
 This app leverages Rails 8's simplified deployment stack:
@@ -47,57 +63,15 @@ Comprehensive documentation is available in the `/docs` folder:
 - [Quick Start Guide](docs/quick-start-guide.md) - Developer setup and core features
 - [Deployment Guide](docs/deployment-guide.md) - Production deployment with Kamal
 
-## 🚀 Quick Start
+## Getting Started
 
-### Prerequisites
+- Visit the hosted app at `https://your-domain.example`.
+- Create a free account and log in to start saving and discovering tips.
+- AI-generated tips are an optional paid add-on; no local setup or keys required. Pricing and activation flow will be provided in-app.
 
-- Ruby 3.3.7+ (Rails 8 requirement)
-- SQLite3
-- Node.js (for Tailwind CSS compilation)
+## For Developers & Contributors
 
-### Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/personal-golf.git
-cd personal-golf
-
-# Install dependencies
-bundle install
-
-# Setup database
-rails db:create db:migrate db:seed
-
-# Install and build Tailwind CSS
-rails assets:precompile
-
-# Start the development server
-bin/dev
-```
-
-The app will be available at `http://localhost:3000`
-
-### Development Commands
-
-```bash
-# Start all services (Rails + Tailwind watcher)
-bin/dev
-
-# Run Rails server only
-rails server
-
-# Run background jobs
-bin/jobs
-
-# Run tests
-rails test
-
-# Run linter
-bundle exec rubocop
-
-# Run security scanner
-bundle exec brakeman
-```
+- To run locally or contribute, see the [Quick Start Guide](docs/quick-start-guide.md) and [Deployment Guide](docs/deployment-guide.md).
 
 ## 🐳 Deployment
 
@@ -129,10 +103,10 @@ end
 class Tip < ApplicationRecord
   belongs_to :user, :category
   has_many :saves, counter_cache: true
-  
+
   # Real-time broadcasts
   broadcasts_to :category
-  
+
   # Background processing
   after_create_commit :process_tip_async
 end

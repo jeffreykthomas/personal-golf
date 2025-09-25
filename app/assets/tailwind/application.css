@@ -81,6 +81,14 @@
       background-color: #1f2937;
     }
   }
+
+  /* Tabs: active state pill */
+  .tabs .tab.active {
+    background-color: #00dc82; /* accent green */
+    color: #000000 !important; /* black text for contrast */
+    border-radius: 9999px; /* pill */
+    box-shadow: 0 2px 8px rgba(0, 220, 130, 0.35);
+  }
 }
 
 /* Custom Utilities */

@@ -1,0 +1,21 @@
+<div class="container mx-auto p-4 md:p-6 lg:p-8">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-heading">Choose a Course</h2>
+    <%= link_to "Add a Course", new_course_path, class: "btn btn-primary" %>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <% @courses.each do |course| %>
+      <%= link_to course_path(course), class: "block bg-dark-card rounded-2xl p-6 border border-dark-border hover:border-golf-green-500 transition-colors" do %>
+        <h3 class="text-white font-semibold text-lg mb-2"><%= course.name %></h3>
+        <% if course.location.present? %>
+          <p class="text-caption mb-1"><%= course.location %></p>
+        <% end %>
+        <% if course.description.present? %>
+          <p class="text-body line-clamp-2"><%= course.description %></p>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+

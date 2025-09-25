@@ -1,0 +1,48 @@
+<div class="container mx-auto p-4 md:p-6 lg:p-8">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-heading"><%= @course.name %></h2>
+    <%= link_to 'All Courses', courses_path, class: 'text-caption hover:underline' %>
+  </div>
+
+  <% if @course.location.present? %>
+    <p class="text-caption mb-2"><%= @course.location %></p>
+  <% end %>
+  <% if @course.description.present? %>
+    <p class="text-body mb-6"><%= @course.description %></p>
+  <% end %>
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+    <% @holes.each do |hole| %>
+      <%= link_to hole_course_path(@course, number: hole.number), class: "block bg-dark-card rounded-xl p-4 border border-dark-border hover:border-golf-green-500 text-center" do %>
+        <div class="text-caption">Hole</div>
+        <div class="text-white font-semibold text-xl"><%= hole.number %></div>
+        <% if hole.par.present? %>
+          <div class="text-caption">Par <%= hole.par %></div>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="mt-6">
+    <% if @holes.any? %>
+      <%= link_to 'Start at Hole 1', hole_course_path(@course, number: 1), class: 'btn-primary' %>
+    <% end %>
+  </div>
+
+  <div class="mt-8 p-4 border border-dark-border rounded-xl bg-dark-card/60">
+    <h3 class="text-white font-semibold mb-3">Course Maintenance</h3>
+    <div class="flex flex-col md:flex-row items-start md:items-end gap-4">
+      <%= form_with url: generate_holes_course_path(@course), method: :post do %>
+        <label class="block text-sm text-caption mb-1">Generate holes</label>
+        <%= select_tag :num_holes, options_for_select([["9", 9], ["18", 18]], selected: 18), class: "rounded-lg bg-dark-card border border-dark-border px-3 py-2 text-white" %>
+        <%= submit_tag 'Backfill', class: 'btn btn-primary ml-2' %>
+      <% end %>
+
+      <div class="flex-1"></div>
+
+      <%= button_to 'Delete Course', course_path(@course), method: :delete, data: { confirm: 'Are you sure? This will delete all holes and images.' }, class: 'btn btn-danger' %>
+    </div>
+  </div>
+</div>
+
+

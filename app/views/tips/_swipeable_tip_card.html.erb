@@ -89,6 +89,16 @@
       <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
         <%= tip.phase.humanize %>
       </span>
+      <% if tip.hole_number.present? %>
+        <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
+          Hole <%= tip.hole_number %>
+        </span>
+      <% end %>
+      <% tip.human_tags.each do |t| %>
+        <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
+          <%= t %>
+        </span>
+      <% end %>
     </div>
 
     <!-- Button fallbacks (always visible for accessibility) -->

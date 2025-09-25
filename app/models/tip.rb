@@ -1,12 +1,24 @@
 class Tip < ApplicationRecord
   belongs_to :user
   belongs_to :category
+  belongs_to :course, optional: true
   has_many :saved_tips, dependent: :destroy
   has_many :saved_by_users, through: :saved_tips, source: :user
+
+  TAG_OPTIONS = %w[
+    driver fairway_woods long_irons short_irons wedges putter
+    full_shots punch_shots hook_shots slice_shots pitches chips flop_shots
+    long_putts short_putts
+    from_the_tee approach_shot around_the_green on_the_green
+  ].freeze
 
   validates :title, presence: true, length: { minimum: 5, maximum: 100 }
   validates :content, presence: true, length: { minimum: 10, maximum: 1000 }
   validates :youtube_url, format: { with: /\A(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}(\?.*)?\z/, allow_blank: true }
+  validate :tags_are_allowed
+  validates :hole_number, numericality: { only_integer: true, greater_than: 0, less_than: 19 }, allow_nil: true
+  validate :course_tip_requires_hole_number
+  validate :course_tip_requires_course
 
   enum :phase, { pre_round: 0, during_round: 1, post_round: 2 }
   enum :skill_level, { beginner: 0, intermediate: 1, advanced: 2 }
@@ -34,6 +46,40 @@ class Tip < ApplicationRecord
   }
 
   after_create_commit :broadcast_new_tip
+
+  # Tags helpers
+  def tags
+    raw = read_attribute(:tags)
+    return [] if raw.blank?
+    parsed = (JSON.parse(raw) rescue nil)
+    list = parsed.is_a?(Array) ? parsed : raw.to_s.split(',')
+    normalize_tags(list)
+  end
+
+  def tags=(value)
+    list = case value
+           when String
+             begin
+               parsed = JSON.parse(value)
+               parsed.is_a?(Array) ? parsed : value.split(',')
+             rescue JSON::ParserError
+               value.split(',')
+             end
+           when Array
+             value
+           else
+             []
+           end
+    write_attribute(:tags, normalize_tags(list).to_json)
+  end
+
+  def self.allowed_tags
+    TAG_OPTIONS
+  end
+
+  def human_tags
+    tags.map { |t| t.tr('_', ' ') }
+  end
 
   def increment_save_count!
     increment!(:save_count)
@@ -79,6 +125,25 @@ class Tip < ApplicationRecord
   end
 
   private
+
+  def normalize_tags(list)
+    Array(list).map { |t| t.to_s.strip.downcase.tr(' ', '_') }.uniq
+  end
+
+  def tags_are_allowed
+    invalid = tags - TAG_OPTIONS
+    errors.add(:tags, "contain invalid entries: #{invalid.join(', ')}") if invalid.any?
+  end
+
+  def course_tip_requires_hole_number
+    return unless category&.slug == 'course-tip'
+    errors.add(:hole_number, 'is required for course tips') if hole_number.blank?
+  end
+
+  def course_tip_requires_course
+    return unless category&.slug == 'course-tip'
+    errors.add(:course, 'is required for course tips') if course.nil?
+  end
 
   def broadcast_new_tip
     # Broadcast via Turbo Streams when implemented

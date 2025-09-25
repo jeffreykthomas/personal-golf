@@ -6,7 +6,30 @@
 - [ ] Create Fly.io account: https://fly.io/app/sign-up
 - [ ] Have Cloudflare account ready
 
-## Initial Setup (One Time)
+## Local Testing
+
+To run locally:
+
+```bash
+# From project root
+cd /Users/jeffreythomas/Documents/personal-golf
+
+# Install Ruby gems
+bundle install
+
+# Setup the database (create, migrate, seed if needed)
+bin/rails db:prepare
+# Optional sample data
+# bin/rails db:seed
+
+# Start the dev server (Procfile.dev: Rails + assets)
+bin/dev
+
+# Alternatively, just Rails server (no Procfile tasks)
+# bin/rails server
+```
+
+## Initial Setup
 
 ### 1. Deploy to Fly.io
 

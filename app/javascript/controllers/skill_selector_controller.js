@@ -11,10 +11,10 @@ export default class extends Controller {
   selectLevel(event) {
     // Visual feedback is handled by CSS peer selectors
     // But we can add additional behavior here if needed
-    
+
     // Update submit button state
     this.updateSubmitButton();
-    
+
     // Optional: Add haptic feedback on mobile
     if (navigator.vibrate) {
       navigator.vibrate(10);
@@ -22,8 +22,8 @@ export default class extends Controller {
   }
 
   updateSubmitButton() {
-    const hasSelection = this.radioTargets.some(radio => radio.checked);
-    
+    const hasSelection = this.radioTargets.some((radio) => radio.checked);
+
     if (this.hasSubmitButtonTarget) {
       if (hasSelection) {
         this.submitButtonTarget.disabled = false;

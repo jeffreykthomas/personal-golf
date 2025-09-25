@@ -21,11 +21,11 @@
         <div class="relative w-full h-full flex items-center justify-center"
              data-controller="image-swiper"
              data-image-swiper-target="container"
-             data-image-swiper-images-value='<%= raw(images.select { |i| i.image.attached? }.first(6).map { |i| url_for(i.image.variant(resize_to_limit: [1200, 900])) }.to_json) %>'
+             data-image-swiper-images-value='<%= raw(images.select { |i| i.image.attached? }.first(6).map { |i| url_for(i.image) }.to_json) %>'
              data-image-swiper-index-value="<%= initial_index %>"
              data-action="touchstart->image-swiper#touchStart touchmove->image-swiper#touchMove touchend->image-swiper#touchEnd">
           <img data-image-swiper-target="image" alt="Hole layout" class="course-image max-w-full max-h-[calc(100vh-5rem)] h-auto object-contain rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
-               src="<%= url_for(@display_image.image.variant(resize_to_limit: [1200, 900])) %>">
+               src="<%= url_for(@display_image.image) %>">
           <div class="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs text-white/80 bg-black/40 px-2 py-1 rounded"
                data-image-swiper-target="indexLabel"></div>
           <% if @hole.par.present? %>
@@ -128,13 +128,16 @@
         </div>
         <div class="add-tip-form bg-[#00dc82]/5 border border-[#00dc82]/30 rounded-md p-4 mt-4">
           <h3 class="mb-3 text-white font-medium">Add New Tip</h3>
-          <div class="grid grid-cols-3 gap-2 mb-3">
-            <button class="tip-type-btn px-2 py-2 bg-white/5 border border-white/10 text-white/70 rounded">Course</button>
-            <button class="tip-type-btn px-2 py-2 bg-white/5 border border-white/10 text-white/70 rounded">Personal</button>
-            <button class="tip-type-btn px-2 py-2 bg-white/5 border border-white/10 text-white/70 rounded">Weather</button>
-          </div>
-          <textarea class="tip-input w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded min-h-20" placeholder="Enter your tip or note about this hole..."></textarea>
-          <button class="action-btn w-full px-3 py-2 rounded-md bg-[#00dc82] text-black font-semibold hover:bg-[#00c574] mt-2">Add Tip</button>
+          <%= form_with url: tips_path, method: :post, class: 'space-y-2' do %>
+            <%= hidden_field_tag 'tip[category_id]', Category.find_by(slug: 'course-tip')&.id %>
+            <%= hidden_field_tag 'tip[course_id]', @course.id %>
+            <%= hidden_field_tag 'tip[hole_number]', @hole.number %>
+            <%= hidden_field_tag 'return_to_hole', '1' %>
+
+            <input type="text" name="tip[title]" class="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded" placeholder="Title (e.g., 'Play left of bunker')">
+            <textarea name="tip[content]" class="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded min-h-20" placeholder="Enter your tip or note about this hole..."></textarea>
+            <button type="submit" class="action-btn w-full px-3 py-2 rounded-md bg-[#00dc82] text-black font-semibold hover:bg-[#00c574]">Add Tip</button>
+          <% end %>
         </div>
       </div>
 

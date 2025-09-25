@@ -13,3 +13,6 @@ bundle exec rails db:migrate
 
 # Clean up old assets
 bundle exec rails assets:clean
+
+# One-time seed to ensure baseline data (idempotent seeds)
+bundle exec rails db:seed

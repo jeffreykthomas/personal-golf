@@ -1,0 +1,118 @@
+---
+courses:
+- name: Demo National
+  location: Anywhere, USA
+  description: A sample course for testing hole navigation and course tips.
+  holes:
+  - number: 1
+    par: 3
+    yardage: 350
+  - number: 2
+    par: 5
+    yardage: 510
+  - number: 3
+    par: 5
+    yardage: 510
+  - number: 4
+    par: 3
+    yardage: 350
+  - number: 5
+    par: 4
+    yardage: 120
+  - number: 6
+    par: 5
+    yardage: 150
+  - number: 7
+    par: 4
+    yardage: 350
+  - number: 8
+    par: 3
+    yardage: 120
+  - number: 9
+    par: 3
+    yardage: 120
+  - number: 10
+    par: 5
+    yardage: 120
+  - number: 11
+    par: 4
+    yardage: 120
+  - number: 12
+    par: 4
+    yardage: 510
+  - number: 13
+    par: 4
+    yardage: 120
+  - number: 14
+    par: 5
+    yardage: 350
+  - number: 15
+    par: 5
+    yardage: 420
+  - number: 16
+    par: 3
+    yardage: 120
+  - number: 17
+    par: 3
+    yardage: 120
+  - number: 18
+    par: 3
+    yardage: 350
+- name: Golf Club of Ranch California
+  location: San Diego, CA
+  description: ''
+  holes:
+  - number: 1
+    par: 5
+    yardage: 566
+  - number: 2
+    par: 3
+    yardage: 181
+  - number: 3
+    par: 4
+    yardage: 411
+  - number: 4
+    par: 5
+    yardage: 551
+  - number: 5
+    par: 4
+    yardage: 423
+  - number: 6
+    par: 3
+    yardage: 165
+  - number: 7
+    par: 4
+    yardage: 345
+  - number: 8
+    par: 4
+    yardage: 428
+  - number: 9
+    par: 4
+    yardage: 394
+  - number: 10
+    par: 3
+    yardage: 139
+  - number: 11
+    par: 4
+    yardage: 408
+  - number: 12
+    par: 4
+    yardage: 424
+  - number: 13
+    par: 5
+    yardage: 566
+  - number: 14
+    par: 4
+    yardage: 423
+  - number: 15
+    par: 4
+    yardage: 350
+  - number: 16
+    par: 3
+    yardage: 204
+  - number: 17
+    par: 5
+    yardage: 510
+  - number: 18
+    par: 4
+    yardage: 447

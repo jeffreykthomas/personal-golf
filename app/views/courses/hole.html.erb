@@ -21,11 +21,11 @@
         <div class="relative w-full h-full flex items-center justify-center"
              data-controller="image-swiper"
              data-image-swiper-target="container"
-             data-image-swiper-images-value='<%= raw(images.select { |i| i.image.attached? }.map { |i| url_for(i.image.variant(resize_to_limit: [1600, 1200])) }.to_json) %>'
+             data-image-swiper-images-value='<%= raw(images.select { |i| i.image.attached? }.first(6).map { |i| url_for(i.image.variant(resize_to_limit: [1200, 900])) }.to_json) %>'
              data-image-swiper-index-value="<%= initial_index %>"
              data-action="touchstart->image-swiper#touchStart touchmove->image-swiper#touchMove touchend->image-swiper#touchEnd">
           <img data-image-swiper-target="image" alt="Hole layout" class="course-image max-w-full max-h-[calc(100vh-5rem)] h-auto object-contain rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
-               src="<%= url_for(@display_image.image.variant(resize_to_limit: [1600, 1200])) %>">
+               src="<%= url_for(@display_image.image.variant(resize_to_limit: [1200, 900])) %>">
           <div class="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs text-white/80 bg-black/40 px-2 py-1 rounded"
                data-image-swiper-target="indexLabel"></div>
           <% if @hole.par.present? %>

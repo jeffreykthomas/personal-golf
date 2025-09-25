@@ -9,6 +9,13 @@ fi
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
+  # One-time seed using sentinel in mounted storage
+  SENTINEL="/rails/storage/.seeded"
+  if [ ! -f "$SENTINEL" ]; then
+    echo "Seeding database on first boot..."
+    ./bin/rails db:seed || true
+    touch "$SENTINEL"
+  fi
 fi
 
 exec "${@}"

@@ -1,0 +1,416 @@
+---
+images:
+- course_name: Demo National
+  course_location: Anywhere, USA
+  hole_number: 1
+  kind: original
+  status: processing
+  original_filename: hole-1.webp
+  content_type: image/webp
+  byte_size: 57952
+  file: jccsc6se5ljmyw8eodo99urx1lp1.webp
+- course_name: Demo National
+  course_location: Anywhere, USA
+  hole_number: 1
+  kind: original
+  status: processing
+  original_filename: Screenshot 2025-08-25 at 10.04.20 AM.png
+  content_type: image/png
+  byte_size: 842495
+  file: 262nyyhzuu0pe3vzueini3bezi69.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 1
+  kind: original
+  status: processing
+  original_filename: Screenshot 2025-09-22 at 8.48.51 PM.png
+  content_type: image/png
+  byte_size: 233311
+  file: jiptvgao3q7tgtu0849lua57hnfh.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 1
+  kind: original
+  status: processing
+  original_filename: Screenshot 2025-09-22 at 8.48.34 PM.png
+  content_type: image/png
+  byte_size: 255607
+  file: aqxml77vnajqftwvg90apgm4t7gu.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 1
+  kind: original
+  status: failed
+  original_filename: Screenshot 2025-09-22 at 8.48.51 PM.png
+  content_type: image/png
+  byte_size: 233311
+  file: sjyusjwgjs55f7x6nvm2jp8kl1wu.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 1
+  kind: original
+  status: failed
+  original_filename: Screenshot 2025-09-22 at 8.48.51 PM.png
+  content_type: image/png
+  byte_size: 233311
+  file: 4lgiap7uq9x5bwcczphmqlca1abc.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 1
+  kind: original
+  status: failed
+  original_filename: Screenshot 2025-09-22 at 8.48.34 PM.png
+  content_type: image/png
+  byte_size: 255607
+  file: yll2thohxo72sv7s178yoxc9jq4q.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 1
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-22 at 8.48.51 PM.png
+  content_type: image/png
+  byte_size: 233311
+  file: oyvrwr77y9b7ifkm07pvg9on0e3i.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 1
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 1084990
+  file: ugbzwz4kg9sq96vicj924b3z3cri.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 1
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-22 at 8.48.34 PM.png
+  content_type: image/png
+  byte_size: 255607
+  file: gv12znqf78m8n5v7l3ntxxgw612b.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 1
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 884764
+  file: ucqxgn9or19eh65hhope4noicr5j.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 2
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-23 at 10.31.58 PM_cropped.png
+  content_type: image/png
+  byte_size: 210557
+  file: zdq8s7vp5gp40ov78up4irmit8lj.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 2
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 848674
+  file: y0cu9dvet0aqnpncfv3b5qhzay8v.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 3
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-23 at 10.32.24 PM_cropped.png
+  content_type: image/png
+  byte_size: 259413
+  file: lyrwy3s0weunsn7pndanlw708ww1.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 3
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 904102
+  file: 7huukoxsr0tjh6tnu3m3835iezde.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 4
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-23 at 10.32.57 PM_cropped.png
+  content_type: image/png
+  byte_size: 254217
+  file: ql6486sidwazyrxtj8jcpopfz8gi.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 4
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 893695
+  file: w6762jj8bcdl9ughv3gu8xlwm7x1.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 5
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-23 at 10.33.31 PM_cropped.png
+  content_type: image/png
+  byte_size: 233381
+  file: p7neved52c529ae3ojxz69bxq0ez.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 5
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 957147
+  file: fgwko5jcw2m9by80r88vyg0martg.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 6
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-23 at 10.33.47 PM_cropped.png
+  content_type: image/png
+  byte_size: 193088
+  file: vnd4t2v5496ysv6mn0xmhc0wxxna.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 6
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 862097
+  file: tecnqqi9002w15ajlja2ljxrpnvm.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 7
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 2.04.45 PM_cropped.png
+  content_type: image/png
+  byte_size: 276416
+  file: jhbuj37icz2bxtcxfsva5tt1a3ub.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 7
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 898338
+  file: o9gea5d6rajt5406u4bt5l9l9ev0.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 8
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 2.05.43 PM_cropped.png
+  content_type: image/png
+  byte_size: 265735
+  file: hkjvf90kqdzfodhftzpeairwgmga.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 8
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 845356
+  file: 2msowbjxs0hq1axljkitsyj7adza.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 9
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 2.07.12 PM_cropped.png
+  content_type: image/png
+  byte_size: 269526
+  file: j0h83yenr95qv06fr4xspdtwqtau.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 9
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 945963
+  file: f1638n88hvtol0he2b9f434tx1oj.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 10
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 2.20.00 PM_cropped.png
+  content_type: image/png
+  byte_size: 210193
+  file: gtn447hsvqemnepfg2yonvagixmi.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 10
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 946228
+  file: 3jds1tp81tn8x52f9mi0b2z4wqt1.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 11
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 2.21.30 PM_cropped.png
+  content_type: image/png
+  byte_size: 261504
+  file: x1r858qipf9tkqg3e00qyeqs5v6b.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 11
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 1013727
+  file: y5ygahi9vdvai6zgyelrpq51qg4i.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 12
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 2.27.55 PM_cropped.png
+  content_type: image/png
+  byte_size: 293131
+  file: n2n083f57ody85sl0t7hd0zt79yv.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 12
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 987248
+  file: q2wfci243gdzx4q03556yhwtqmj8.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 13
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 2.28.31 PM_cropped.png
+  content_type: image/png
+  byte_size: 249557
+  file: w055prdtyeowfhx8z0969lbijve1.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 13
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 1118838
+  file: h1y5jx8sjdgjy2a4jf75rebrkjy4.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 14
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 2.29.11 PM_cropped.png
+  content_type: image/png
+  byte_size: 273224
+  file: 15csnrs8muuv9insfph73bntq91j.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 14
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 901016
+  file: ex1vqzujjpjrghbw4z574ojr0kkj.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 14
+  kind: original
+  status: ready
+  original_filename: Screen Recording 2025-05-01 at 12.50.08 PM.mov
+  content_type: video/quicktime
+  byte_size: 1046942
+  file: rcigje7mxhq3pbyrraupc1k8d081.mov
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 15
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 5.37.44 PM_cropped.png
+  content_type: image/png
+  byte_size: 243029
+  file: c19mj2chv8fipz146hszh4h2ckvw.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 15
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 1043939
+  file: 71zr951hhvw4ij39ioqw5t884d84.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 16
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 5.38.29 PM_cropped.png
+  content_type: image/png
+  byte_size: 175524
+  file: n4mzw1gcmpo0r1tz35avn8mb1pgd.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 16
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 780337
+  file: 8inmls5mr3g6jhc603vjkfn7x3v6.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 17
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 5.39.39 PM_cropped.png
+  content_type: image/png
+  byte_size: 235471
+  file: esiod689gxf4a3jo2e6mduf40vd5.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 17
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 903316
+  file: cj70upsjtmp332u8ub09z34fa8nm.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 18
+  kind: original
+  status: ready
+  original_filename: Screenshot 2025-09-24 at 5.40.29 PM_cropped.png
+  content_type: image/png
+  byte_size: 262347
+  file: jrr37ke1p3hybg50040l7tvrf050.png
+- course_name: Golf Club of Ranch California
+  course_location: San Diego, CA
+  hole_number: 18
+  kind: stylized
+  status: ready
+  original_filename: styled.png
+  content_type: image/png
+  byte_size: 924942
+  file: 4wx19j31izz6zg9hlg7k7w2de1lo.png

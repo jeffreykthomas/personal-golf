@@ -16,6 +16,14 @@ if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
     ./bin/rails db:seed || true
     touch "$SENTINEL"
   fi
+
+  # One-time HoleImage import from bundled sample data
+  IMAGES_SENTINEL="/rails/storage/.images_imported"
+  if [ ! -f "$IMAGES_SENTINEL" ] && [ -f "/rails/db/sample_data/hole_images/manifest.yml" ]; then
+    echo "Importing HoleImage media on first boot..."
+    ./bin/rails data:import_hole_images["$IMPORT_OWNER_EMAIL","/rails/db/sample_data/hole_images"] || true
+    touch "$IMAGES_SENTINEL"
+  fi
 fi
 
 exec "${@}"

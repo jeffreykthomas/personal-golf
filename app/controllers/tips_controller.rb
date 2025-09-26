@@ -90,7 +90,13 @@ class TipsController < ApplicationController
     @tip = current_user.tips.new(tip_params)
     @tip.published = true
     if @tip.save
-      redirect_to tips_path, notice: 'Tip created successfully.'
+      # If submitted from a course hole page, auto-save and redirect back there
+      if params[:return_to_hole].present? && @tip.course_id.present? && @tip.hole_number.present?
+        current_user.save_tip(@tip)
+        redirect_to hole_course_path(@tip.course_id, number: @tip.hole_number, tab: 'tips'), notice: 'Tip added to this hole.'
+      else
+        redirect_to tips_path, notice: 'Tip created successfully.'
+      end
     else
       @courses = Course.order(:name)
       @categories = Category.order(:name)

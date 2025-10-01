@@ -6,11 +6,12 @@ export default class extends Controller {
   connect() {
     // Check if any radio is already selected
     this.updateSubmitButton();
+    this.updateVisualState();
   }
 
   selectLevel(event) {
-    // Visual feedback is handled by CSS peer selectors
-    // But we can add additional behavior here if needed
+    // Update visual state for all options
+    this.updateVisualState();
 
     // Update submit button state
     this.updateSubmitButton();
@@ -19,6 +20,21 @@ export default class extends Controller {
     if (navigator.vibrate) {
       navigator.vibrate(10);
     }
+  }
+
+  updateVisualState() {
+    this.radioTargets.forEach((radio) => {
+      const label = radio.closest('label');
+      const indicator = label.querySelector('.radio-indicator');
+
+      if (radio.checked) {
+        indicator?.classList.remove('scale-0');
+        indicator?.classList.add('scale-100');
+      } else {
+        indicator?.classList.remove('scale-100');
+        indicator?.classList.add('scale-0');
+      }
+    });
   }
 
   updateSubmitButton() {

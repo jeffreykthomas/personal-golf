@@ -41,25 +41,33 @@ export default class extends Controller {
       checkmark?.classList.remove('hidden');
       checkmark?.classList.add('block');
 
-      // Update checkbox indicator
-      checkboxIndicator?.classList.add('border-golf-green-500', 'bg-golf-green-500');
-      checkboxIndicator?.classList.remove('border-gray-500');
+      // Update checkbox indicator with inline styles
+      if (checkboxIndicator) {
+        checkboxIndicator.style.borderColor = '#22c55e';
+        checkboxIndicator.style.backgroundColor = '#22c55e';
+      }
 
-      // Update card appearance
-      card?.classList.add('border-golf-green-500', 'bg-dark-surface');
-      card?.classList.remove('border-dark-border');
+      // Update card appearance with inline styles
+      if (card) {
+        card.style.borderColor = '#22c55e';
+        card.style.backgroundColor = '#1a1a1a';
+      }
     } else {
       // Hide checkmark
       checkmark?.classList.remove('block');
       checkmark?.classList.add('hidden');
 
       // Reset checkbox indicator
-      checkboxIndicator?.classList.remove('border-golf-green-500', 'bg-golf-green-500');
-      checkboxIndicator?.classList.add('border-gray-500');
+      if (checkboxIndicator) {
+        checkboxIndicator.style.borderColor = '';
+        checkboxIndicator.style.backgroundColor = '';
+      }
 
       // Reset card appearance
-      card?.classList.remove('border-golf-green-500', 'bg-dark-surface');
-      card?.classList.add('border-dark-border');
+      if (card) {
+        card.style.borderColor = '';
+        card.style.backgroundColor = '';
+      }
     }
   }
 

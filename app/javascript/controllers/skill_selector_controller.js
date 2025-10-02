@@ -27,32 +27,38 @@ export default class extends Controller {
       const label = radio.closest('label');
       const indicator = label.querySelector('.radio-indicator');
       const card = label.querySelector('[class*="bg-dark-card"]');
-      const indicatorContainer = label.querySelector('.w-6.h-6.border-2.rounded-full');
-      
+      const indicatorRing = label.querySelector('.indicator-ring');
+
       if (radio.checked) {
         // Show the indicator
         indicator?.classList.remove('hidden');
         indicator?.classList.add('block');
-        
-        // Update card appearance
-        card?.classList.add('border-golf-green-500', 'bg-dark-surface');
-        card?.classList.remove('border-dark-border');
-        
-        // Update indicator container
-        indicatorContainer?.classList.add('border-golf-green-500');
-        indicatorContainer?.classList.remove('border-gray-500');
+
+        // Update card appearance with inline styles
+        if (card) {
+          card.style.borderColor = '#22c55e';
+          card.style.backgroundColor = '#1a1a1a';
+        }
+
+        // Update indicator ring
+        if (indicatorRing) {
+          indicatorRing.style.borderColor = '#22c55e';
+        }
       } else {
         // Hide the indicator
         indicator?.classList.remove('block');
         indicator?.classList.add('hidden');
-        
+
         // Reset card appearance
-        card?.classList.remove('border-golf-green-500', 'bg-dark-surface');
-        card?.classList.add('border-dark-border');
-        
-        // Reset indicator container
-        indicatorContainer?.classList.remove('border-golf-green-500');
-        indicatorContainer?.classList.add('border-gray-500');
+        if (card) {
+          card.style.borderColor = '';
+          card.style.backgroundColor = '';
+        }
+
+        // Reset indicator ring
+        if (indicatorRing) {
+          indicatorRing.style.borderColor = '';
+        }
       }
     });
   }

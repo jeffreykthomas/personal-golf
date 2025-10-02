@@ -16,12 +16,13 @@
       <% end %>
 
       <% if @display_image&.image&.attached? %>
-        <% images = @hole.images_for_display.to_a %>
+        <% # Limit to 6 images to reduce URL generation time %>
+        <% images = @hole.images_for_display.limit(6).to_a %>
         <% initial_index = [images.index(@display_image) || 0, 0].max %>
         <div class="relative w-full h-full flex items-center justify-center"
              data-controller="image-swiper"
              data-image-swiper-target="container"
-             data-image-swiper-images-value='<%= raw(images.select { |i| i.image.attached? }.first(6).map { |i| url_for(i.image) }.to_json) %>'
+             data-image-swiper-images-value='<%= raw(images.map { |i| url_for(i.image) }.to_json) %>'
              data-image-swiper-index-value="<%= initial_index %>"
              data-action="touchstart->image-swiper#touchStart touchmove->image-swiper#touchMove touchend->image-swiper#touchEnd">
           <img data-image-swiper-target="image" alt="Hole layout" class="course-image max-w-full max-h-[calc(100vh-5rem)] h-auto object-contain rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
@@ -30,7 +31,8 @@
                data-image-swiper-target="indexLabel"></div>
           <% if @hole.par.present? %>
             <div class="distance-marker par absolute top-[5%] left-[5%] text-2xl font-bold bg-red-500/30 border-2 border-red-500/60 text-white px-2 py-1 rounded">
-              Par <%= @hole.par %><br />
+            Hole <%= @hole.number %><br />
+            Par <%= @hole.par %><br />
               <%= @hole.yardage %> yards
             </div>
           <% end %>
@@ -60,8 +62,7 @@
         </div>
       <% end %>
       <div class="tabs flex gap-2 mb-6 bg-white/5 p-1 rounded-xl">
-        <button class="tab flex-1 px-3 py-2 rounded-md text-sm font-medium text-white/70" data-action="click->tabs#switch" data-tabs-target="tab" data-tab="stats">Stats</button>
-        <button class="tab flex-1 px-3 py-2 rounded-md text-sm font-medium text-white/70" data-action="click->tabs#switch" data-tabs-target="tab" data-tab="tips">Tips</button>
+        <button class="tab flex-1 px-3 py-2 rounded-md text-sm font-medium text-white/70" data-action="click->tabs#switch" data-tabs-target="tab" data-tab="stats">Stats & Tips</button>
         <button class="tab flex-1 px-3 py-2 rounded-md text-sm font-medium text-white/70" data-action="click->tabs#switch" data-tabs-target="tab" data-tab="media">Media</button>
       </div>
 
@@ -101,43 +102,76 @@
             <% end %>
           </div>
         </div>
-      </div>
 
-      <div class="tab-panel hidden" data-tabs-target="panel" data-tab="tips">
-        <div class="tips-list mb-4">
-          <% if @saved_tips.any? %>
-            <% @saved_tips.each do |tip| %>
-              <div class="tip-item relative bg-white/5 border border-white/10 rounded-md p-4 mb-3">
-                <div class="tip-header flex items-center justify-between mb-2">
-                  <span class="tip-type px-2 py-0.5 rounded text-xs uppercase bg-[#00dc82]/20 text-[#00dc82]">Course</span>
-                  <span class="tip-date text-xs text-white/50"><%= time_ago_in_words(tip.created_at) %> ago</span>
+        <div class="mb-6">
+          <h3 class="text-xs uppercase tracking-wide text-white/50 mb-3">Tips</h3>
+          <div class="tips-list mb-4">
+            <% if @hole_tips.any? %>
+              <% @hole_tips.each do |tip| %>
+                <div class="tip-item relative bg-white/5 border border-white/10 rounded-md p-4 mb-3" id="tip-<%= tip.id %>">
+                  <div class="tip-header flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                      <span class="tip-type px-2 py-0.5 rounded text-xs uppercase bg-[#00dc82]/20 text-[#00dc82]">Course</span>
+                      <span class="text-xs text-white/70">by <%= tip.user.display_name %></span>
+                    </div>
+                    <span class="tip-date text-xs text-white/50"><%= time_ago_in_words(tip.created_at) %> ago</span>
+                  </div>
+                  <div class="tip-content text-white/90 leading-relaxed">
+                    <div class="font-medium text-white mb-1"><%= tip.title %></div>
+                    <div class="text-sm"><%= tip.content %></div>
+                  </div>
+                  <div class="tip-actions mt-3 flex gap-2">
+                    <% if current_user.saved?(tip) %>
+                      <%= button_to unsave_tip_path(tip), 
+                          method: :delete,
+                          class: "px-3 py-1 bg-[#00dc82] text-black rounded text-xs font-medium hover:bg-[#00c574]" do %>
+                        ✓ Saved
+                      <% end %>
+                    <% else %>
+                      <%= button_to save_tip_path(tip), 
+                          method: :post,
+                          class: "px-3 py-1 bg-white/10 text-white/80 rounded text-xs hover:bg-white/20" do %>
+                        💾 Save
+                      <% end %>
+                    <% end %>
+                    
+                    <%= button_to dismiss_tip_path(tip), 
+                        method: :post,
+                        class: "px-3 py-1 bg-white/10 text-white/60 rounded text-xs hover:bg-red-900/30 hover:text-red-400",
+                        data: { turbo_confirm: "Dismiss this tip? You won't see it again." } do %>
+                      👎 Dismiss
+                    <% end %>
+                  </div>
                 </div>
-                <div class="tip-content text-white/90 leading-relaxed">
-                  <div class="font-medium text-white mb-1"><%= tip.title %></div>
-                  <div class="text-sm"><%= tip.content %></div>
-                </div>
-                <div class="tip-actions absolute top-2 right-2 flex gap-1 opacity-0 hover:opacity-100 transition">
-                  <button class="tip-action-btn px-2 py-1 bg-white/10 text-white/70 rounded text-xs">Edit</button>
-                  <button class="tip-action-btn px-2 py-1 bg-white/10 text-white/70 rounded text-xs">Delete</button>
-                </div>
-              </div>
+              <% end %>
+            <% else %>
+              <p class="text-caption">No tips for this hole yet. Add one below!</p>
             <% end %>
-          <% else %>
-            <p class="text-caption">No tips saved for this hole yet.</p>
-          <% end %>
-        </div>
-        <div class="add-tip-form bg-[#00dc82]/5 border border-[#00dc82]/30 rounded-md p-4 mt-4">
-          <h3 class="mb-3 text-white font-medium">Add New Tip</h3>
-          <%= form_with url: tips_path, method: :post, class: 'space-y-2' do %>
-            <%= hidden_field_tag 'tip[category_id]', Category.find_by(slug: 'course-tip')&.id %>
-            <%= hidden_field_tag 'tip[course_id]', @course.id %>
-            <%= hidden_field_tag 'tip[hole_number]', @hole.number %>
-            <%= hidden_field_tag 'return_to_hole', '1' %>
+          </div>
+          <div class="add-tip-form bg-[#00dc82]/5 border border-[#00dc82]/30 rounded-md p-4 mt-4">
+            <h3 class="mb-3 text-white font-medium">Add New Tip</h3>
+            <%= form_with url: tips_path,
+                          method: :post,
+                          class: 'space-y-2',
+                          data: {
+                            controller: 'hole-tip-feedback',
+                            action: 'turbo:submit-start->hole-tip-feedback#submitStart turbo:submit-end->hole-tip-feedback#submitEnd'
+                          } do %>
+              <%= hidden_field_tag 'tip[category_id]', Category.find_by(slug: 'course-tip')&.id %>
+              <%= hidden_field_tag 'tip[course_id]', @course.id %>
+              <%= hidden_field_tag 'tip[hole_number]', @hole.number %>
+              <%= hidden_field_tag 'return_to_hole', '1' %>
 
-            <input type="text" name="tip[title]" class="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded" placeholder="Title (e.g., 'Play left of bunker')">
-            <textarea name="tip[content]" class="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded min-h-20" placeholder="Enter your tip or note about this hole..."></textarea>
-            <button type="submit" class="action-btn w-full px-3 py-2 rounded-md bg-[#00dc82] text-black font-semibold hover:bg-[#00c574]">Add Tip</button>
-          <% end %>
+              <input type="text" name="tip[title]" class="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded" placeholder="Title (e.g., 'Play left of bunker')">
+              <textarea name="tip[content]" class="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded min-h-20" placeholder="Enter your tip or note about this hole..."></textarea>
+              <button type="submit"
+                      class="action-btn w-full px-3 py-2 rounded-md bg-[#00dc82] text-black font-semibold hover:bg-[#00c574]"
+                      data-hole-tip-feedback-target="button">
+                Add Tip
+              </button>
+              <p class="text-caption text-white/70 min-h-[1rem]" data-hole-tip-feedback-target="message"></p>
+            <% end %>
+          </div>
         </div>
       </div>
 
@@ -201,9 +235,8 @@
           <h3 class="mb-3 text-xs uppercase tracking-wide text-white/50">Saved Media</h3>
           <%= turbo_stream_from @hole_image_stream if defined?(@hole_image_stream) %>
           <div id="hole_images_grid" class="grid grid-cols-2 gap-2">
-            <% images = @hole.hole_images.order(created_at: :desc).limit(8) %>
-            <% if images.any? %>
-              <% images.each do |img| %>
+            <% if @recent_hole_images.any? %>
+              <% @recent_hole_images.each do |img| %>
                 <%= render partial: 'hole_images/tile', locals: { image: img, course: @course, hole: @hole } %>
               <% end %>
             <% else %>
@@ -225,10 +258,9 @@
       <div class="flex items-center gap-2 shrink-0">
         <%= link_to 'Prev', (prev >= 1 ? hole_course_path(@course, number: prev) : '#'), class: "px-4 py-2 rounded-md border border-white/20 text-white/90 bg-white/10 hover:bg-white/15 #{'pointer-events-none opacity-50' if prev < 1}" %>
         <%= link_to 'All Holes', course_path(@course), class: 'px-4 py-2 rounded-md border border-white/20 text-white/90 bg-white/10 hover:bg-white/15' %>
-        <%= link_to 'Next', (nextn <= @course.holes.maximum(:number).to_i ? hole_course_path(@course, number: nextn) : '#'), class: "px-4 py-2 rounded-md bg-[#00dc82] text-black font-semibold hover:bg-[#00c574] #{'pointer-events-none opacity-50' if nextn > @course.holes.maximum(:number).to_i}" %>
+        <%= link_to 'Next', (nextn <= @max_hole_number ? hole_course_path(@course, number: nextn) : '#'), class: "px-4 py-2 rounded-md bg-[#00dc82] text-black font-semibold hover:bg-[#00c574] #{'pointer-events-none opacity-50' if nextn > @max_hole_number}" %>
       </div>
     </div>
   </footer>
 </div>
-
 

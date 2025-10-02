@@ -1,5 +1,5 @@
 class CoursesController < ApplicationController
-  before_action :ensure_onboarding_completed
+  # Removed forced onboarding - users can navigate freely
   before_action :set_course, only: [:show, :hole, :update_hole, :create_hole_tee, :update_hole_tee, :destroy_hole_tee, :upload_layout, :vote_image, :redo_stylization, :destroy_hole_image, :destroy, :generate_holes]
   before_action :set_hole, only: [:hole, :update_hole, :upload_layout]
 
@@ -48,10 +48,37 @@ class CoursesController < ApplicationController
 
   def hole
     @display_image = @hole.select_image_for_display
-    @saved_tips = current_user.saved_tip_items
-                      .where(category: Category.find_by(slug: 'course-tip'))
-                      .where(course: @course, hole_number: @hole.number)
+    
+    # Find category with caching since it's static data
+    course_tip_category = Rails.cache.fetch('category_course_tip', expires_in: 1.hour) do
+      Category.find_by(slug: 'course-tip')
+    end
+    
+    # Show ALL tips for this hole (except dismissed ones)
+    dismissed_tip_ids = current_user.dismissed_tip_items.pluck(:id)
+    @hole_tips = if course_tip_category
+                   Tip.where(category_id: course_tip_category.id)
+                      .where(course_id: @course.id, hole_number: @hole.number)
+                      .where.not(id: dismissed_tip_ids)
                       .includes(:user)
+                      .order(created_at: :desc)
+                 else
+                   Tip.none
+                 end
+    
+    # Get saved tips for this hole specifically (for UI state)
+    @saved_tips = current_user.saved_tip_items
+                      .where(id: @hole_tips.pluck(:id))
+    
+    # Cache max hole number to avoid query in view
+    @max_hole_number = @course.holes.maximum(:number) || 18
+    
+    # Preload recent hole images to avoid N+1 queries in media tab
+    @recent_hole_images = @hole.hole_images
+                               .order(created_at: :desc)
+                               .limit(8)
+                               .includes(image_attachment: :blob, hole: :course)
+    
     @hole_image_stream = "hole_#{@hole.id}_images"
     @hole_flash_stream = "hole_#{@hole.id}_flash"
   end
@@ -205,18 +232,20 @@ class CoursesController < ApplicationController
 
   private
 
-  def ensure_onboarding_completed
-    unless current_user.onboarding_completed?
-      redirect_to onboarding_welcome_path, notice: "Please complete onboarding first."
-    end
-  end
+  # Removed - onboarding is now optional
+  # def ensure_onboarding_completed
+  #   unless current_user.onboarding_completed?
+  #     redirect_to onboarding_welcome_path, notice: "Please complete onboarding first."
+  #   end
+  # end
 
   def set_course
     @course = Course.find(params[:id])
   end
 
   def set_hole
-    @hole = @course.holes.find_by!(number: params[:number])
+    # Preload hole_tees to avoid N+1 queries in the stats tab
+    @hole = @course.holes.includes(:hole_tees).find_by!(number: params[:number])
   end
 
   def course_params

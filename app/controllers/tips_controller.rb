@@ -1,6 +1,6 @@
 class TipsController < ApplicationController
-  before_action :ensure_onboarding_completed
-  before_action :set_tip, only: [:save, :unsave]
+  # Removed forced onboarding - users can navigate freely
+  before_action :set_tip, only: [:save, :unsave, :dismiss, :undismiss]
 
   def index
     @tips = current_user.saved_tip_items.includes(:category, :user)
@@ -45,6 +45,28 @@ class TipsController < ApplicationController
       format.turbo_stream do
         render turbo_stream: turbo_stream.remove("saved-tip-#{@tip.id}")
       end
+    end
+  end
+
+  def dismiss
+    current_user.dismiss_tip(@tip)
+    
+    respond_to do |format|
+      format.json { render json: { status: 'success', dismissed: true } }
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.remove("tip-#{@tip.id}")
+      end
+      format.html { redirect_back(fallback_location: tips_path, notice: "Tip dismissed.") }
+    end
+  end
+
+  def undismiss
+    dismissed_tip = current_user.dismissed_tips.find_by(tip: @tip)
+    dismissed_tip&.destroy
+    
+    respond_to do |format|
+      format.json { render json: { status: 'success', dismissed: false } }
+      format.html { redirect_back(fallback_location: tips_path, notice: "Tip restored.") }
     end
   end
 
@@ -134,11 +156,12 @@ class TipsController < ApplicationController
 
   private
 
-  def ensure_onboarding_completed
-    unless current_user.onboarding_completed?
-      redirect_to onboarding_welcome_path, notice: "Please complete onboarding first."
-    end
-  end
+  # Removed - onboarding is now optional
+  # def ensure_onboarding_completed
+  #   unless current_user.onboarding_completed?
+  #     redirect_to onboarding_welcome_path, notice: "Please complete onboarding first."
+  #   end
+  # end
 
   def set_tip
     @tip = Tip.find(params[:id])

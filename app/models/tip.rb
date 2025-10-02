@@ -4,6 +4,8 @@ class Tip < ApplicationRecord
   belongs_to :course, optional: true
   has_many :saved_tips, dependent: :destroy
   has_many :saved_by_users, through: :saved_tips, source: :user
+  has_many :dismissed_tips, dependent: :destroy
+  has_many :dismissed_by_users, through: :dismissed_tips, source: :user
 
   TAG_OPTIONS = %w[
     driver fairway_woods long_irons short_irons wedges putter
@@ -13,7 +15,7 @@ class Tip < ApplicationRecord
   ].freeze
 
   validates :title, presence: true, length: { minimum: 5, maximum: 100 }
-  validates :content, presence: true, length: { minimum: 10, maximum: 1000 }
+  validates :content, length: { minimum: 10, maximum: 1000 }, allow_blank: true
   validates :youtube_url, format: { with: /\A(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}(\?.*)?\z/, allow_blank: true }
   validate :tags_are_allowed
   validates :hole_number, numericality: { only_integer: true, greater_than: 0, less_than: 19 }, allow_nil: true

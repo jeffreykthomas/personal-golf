@@ -13,7 +13,7 @@ console_command = '/rails/bin/rails console'
   release_command = './bin/release'
 
 [env]
-  PORT = '3000'
+  PORT = '8080'  # Rails/Puma listens on 8080 (non-privileged port)
 
 [[mounts]]
   source = 'data'
@@ -21,24 +21,24 @@ console_command = '/rails/bin/rails console'
   processes = ['app']
 
 [http_service]
-  internal_port = 3000
+  internal_port = 8080  # Fly.io proxy connects to Puma on 8080
   force_https = true
   auto_stop_machines = 'suspend'  # Suspend instead of stop (faster restarts)
   auto_start_machines = true
-  min_machines_running = 0  # Still allow scaling to zero
+  min_machines_running = 1  # Keep 1 machine running to avoid cold starts
   processes = ['app']
 
   [[http_service.checks]]
     interval = '30s'  # Less frequent checks
-    timeout = '5s'     # More time for response
-    grace_period = '30s'  # More time for startup
+    timeout = '10s'    # Increased timeout for slow responses
+    grace_period = '60s'  # More time for startup
     method = 'GET'
-    path = '/up'
+    path = '/up'  # Health check hits Thruster on port 80
 
     [http_service.checks.headers]
       X-Forwarded-Proto = 'https'
 
 [[vm]]
-  memory = '256mb'
+  memory = '1gb'  # Increased to 1GB for better performance and headroom
   cpu_kind = 'shared'
   cpus = 1

@@ -49,6 +49,12 @@ class OnboardingController < ApplicationController
     redirect_to tips_path, notice: "Welcome to Personal Golf! Your first tip has been saved."
   end
 
+  def skip
+    # Mark onboarding as completed so they don't get redirected back
+    current_user.update(onboarding_completed: true)
+    redirect_to tips_path, notice: "You can complete your profile anytime from settings."
+  end
+
   private
 
   def ensure_onboarding_not_completed

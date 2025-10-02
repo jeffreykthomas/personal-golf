@@ -14,30 +14,52 @@ class Hole < ApplicationRecord
   def select_image_for_display
     # Prefer stylized images
     stylized = hole_images.ready.stylized
-    if stylized.exists?
-      images = stylized.includes(image_attachment: :blob)
-    else
-      images = hole_images.ready.includes(image_attachment: :blob)
-    end
-    # Only consider actual images (exclude videos)
-    images = images.select { |img| img.image.attached? && img.image.blob&.content_type.to_s.start_with?("image/") }
+                         .joins(image_attachment: :blob)
+                         .where("active_storage_blobs.content_type LIKE ?", "image/%")
+                         .includes(image_attachment: :blob)
+    
+    images = if stylized.exists?
+               stylized
+             else
+               hole_images.ready
+                         .joins(image_attachment: :blob)
+                         .where("active_storage_blobs.content_type LIKE ?", "image/%")
+                         .includes(image_attachment: :blob)
+             end
+    
     return nil if images.empty?
+    
     # Weighted random by score (default 0.5)
-    weights = images.map { |img, | [img, [img.score, 0.05].max] }
+    images_array = images.to_a
+    weights = images_array.map { |img| [img, [img.score, 0.05].max] }
     total = weights.sum { |(_, w)| w }
     pick = rand * total
     weights.each do |img, w|
       return img if (pick -= w) <= 0
     end
-    images.first
+    images_array.first
   end
 
   def images_for_display
-    preferred = hole_images.ready.stylized
-    scope = preferred.exists? ? preferred : hole_images.ready
-    records = scope.includes(image_attachment: :blob).order(created_at: :desc)
-    # Exclude videos for hero/image-swiper usage
-    records.select { |img| img.image.attached? && img.image.blob&.content_type.to_s.start_with?("image/") }
+    # Prefer stylized images, but check efficiently
+    stylized_count = hole_images.ready.stylized
+                                .joins(image_attachment: :blob)
+                                .where("active_storage_blobs.content_type LIKE ?", "image/%")
+                                .limit(1).count
+    
+    if stylized_count > 0
+      hole_images.ready.stylized
+                .joins(image_attachment: :blob)
+                .where("active_storage_blobs.content_type LIKE ?", "image/%")
+                .includes(image_attachment: :blob)
+                .order(created_at: :desc)
+    else
+      hole_images.ready
+                .joins(image_attachment: :blob)
+                .where("active_storage_blobs.content_type LIKE ?", "image/%")
+                .includes(image_attachment: :blob)
+                .order(created_at: :desc)
+    end
   end
 end
 

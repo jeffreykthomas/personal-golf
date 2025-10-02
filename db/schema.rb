@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_23_091500) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_02_035256) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -56,6 +56,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_23_091500) do
     t.datetime "updated_at", null: false
     t.integer "style_seed"
     t.index "LOWER(name), LOWER(location)", name: "index_courses_on_lower_name_and_lower_location", unique: true
+  end
+
+  create_table "dismissed_tips", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "tip_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["tip_id"], name: "index_dismissed_tips_on_tip_id"
+    t.index ["user_id", "tip_id"], name: "index_dismissed_tips_on_user_id_and_tip_id", unique: true
+    t.index ["user_id"], name: "index_dismissed_tips_on_user_id"
   end
 
   create_table "hole_image_votes", force: :cascade do |t|
@@ -289,6 +299,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_23_091500) do
     t.index ["skill_level"], name: "index_users_on_skill_level"
   end
 
+  add_foreign_key "dismissed_tips", "tips"
+  add_foreign_key "dismissed_tips", "users"
   add_foreign_key "hole_image_votes", "hole_images"
   add_foreign_key "hole_image_votes", "users"
   add_foreign_key "hole_images", "holes"

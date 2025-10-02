@@ -4,6 +4,8 @@ class User < ApplicationRecord
   has_many :tips, dependent: :destroy
   has_many :saved_tips, dependent: :destroy
   has_many :saved_tip_items, through: :saved_tips, source: :tip
+  has_many :dismissed_tips, dependent: :destroy
+  has_many :dismissed_tip_items, through: :dismissed_tips, source: :tip
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
   
@@ -21,11 +23,23 @@ class User < ApplicationRecord
   end
 
   def save_tip(tip)
+    # Remove from dismissed if it was dismissed
+    dismissed_tips.where(tip: tip).destroy_all
     saved_tips.find_or_create_by(tip: tip)
   end
 
   def saved?(tip)
     saved_tips.exists?(tip: tip)
+  end
+
+  def dismiss_tip(tip)
+    # Remove from saved if it was saved
+    saved_tips.where(tip: tip).destroy_all
+    dismissed_tips.find_or_create_by(tip: tip)
+  end
+
+  def dismissed?(tip)
+    dismissed_tips.exists?(tip: tip)
   end
 
   def tips_viewed_count

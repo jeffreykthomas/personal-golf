@@ -20,6 +20,7 @@ Rails.application.routes.draw do
     patch :goals, action: :update_goals
     get :first_tip
     post :save_first_tip
+    post :skip
   end
 
   # Main app routes
@@ -27,6 +28,8 @@ Rails.application.routes.draw do
     member do
       post :save
       delete :unsave
+      post :dismiss
+      delete :undismiss
     end
     collection do
       get :next

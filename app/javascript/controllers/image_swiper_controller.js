@@ -7,6 +7,7 @@ export default class extends Controller {
     'image', // <img>
     'indexLabel', // span for index display
     'container', // wrapper for gesture area
+    'loader', // loading indicator
   ];
 
   static values = {
@@ -19,6 +20,11 @@ export default class extends Controller {
     this.startX = 0;
     this.currentX = 0;
     this.isSwiping = false;
+
+    // Show loader initially (image might be cached though)
+    if (this.hasLoaderTarget) {
+      this.loaderTarget.classList.remove('hidden');
+    }
 
     // Render initial image
     this.showIndex(this.indexValue);
@@ -89,6 +95,12 @@ export default class extends Controller {
 
   // Helpers
   setIndex(newIndex, direction = 0) {
+    // Show loader for new image
+    if (this.hasLoaderTarget) {
+      this.loaderTarget.classList.remove('hidden');
+      this.loaderTarget.style.opacity = '1';
+    }
+
     const oldImg = this.imageTarget;
     const newUrl = this.imagesValue[newIndex];
     if (!newUrl) return;
@@ -141,4 +153,29 @@ export default class extends Controller {
     this.imageTarget.style.transform = 'translateX(0)';
     this.imageTarget.style.opacity = '1';
   }
+
+  // Loading state handlers
+  imageLoaded() {
+    // Hide the loader when image is loaded
+    if (this.hasLoaderTarget) {
+      this.loaderTarget.style.transition = 'opacity 300ms ease';
+      this.loaderTarget.style.opacity = '0';
+      setTimeout(() => {
+        this.loaderTarget.classList.add('hidden');
+      }, 300);
+    }
+  }
+
+  imageError() {
+    // Hide loader and show error state
+    if (this.hasLoaderTarget) {
+      this.loaderTarget.innerHTML = `
+        <div class="flex flex-col items-center gap-3">
+          <div class="text-4xl">⚠️</div>
+          <p class="text-white/60 text-sm">Failed to load image</p>
+        </div>
+      `;
+    }
+  }
+
 }

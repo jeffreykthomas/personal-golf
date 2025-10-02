@@ -26,13 +26,33 @@ export default class extends Controller {
     this.radioTargets.forEach((radio) => {
       const label = radio.closest('label');
       const indicator = label.querySelector('.radio-indicator');
-
+      const card = label.querySelector('[class*="bg-dark-card"]');
+      const indicatorContainer = label.querySelector('.w-6.h-6.border-2.rounded-full');
+      
       if (radio.checked) {
-        indicator?.classList.remove('scale-0');
-        indicator?.classList.add('scale-100');
+        // Show the indicator
+        indicator?.classList.remove('hidden');
+        indicator?.classList.add('block');
+        
+        // Update card appearance
+        card?.classList.add('border-golf-green-500', 'bg-dark-surface');
+        card?.classList.remove('border-dark-border');
+        
+        // Update indicator container
+        indicatorContainer?.classList.add('border-golf-green-500');
+        indicatorContainer?.classList.remove('border-gray-500');
       } else {
-        indicator?.classList.remove('scale-100');
-        indicator?.classList.add('scale-0');
+        // Hide the indicator
+        indicator?.classList.remove('block');
+        indicator?.classList.add('hidden');
+        
+        // Reset card appearance
+        card?.classList.remove('border-golf-green-500', 'bg-dark-surface');
+        card?.classList.add('border-dark-border');
+        
+        // Reset indicator container
+        indicatorContainer?.classList.remove('border-golf-green-500');
+        indicatorContainer?.classList.add('border-gray-500');
       }
     });
   }

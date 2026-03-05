@@ -6,6 +6,7 @@ A Progressive Web App (PWA) built with **Ruby on Rails 8** that helps golfers or
 
 - **Personal Knowledge Collection**: Save and organize golf tips across all categories
 - **AI-Powered Content**: Generate personalized tips using Google Gemini API
+- **AI Coach Chat**: Core session-based coaching for onboarding, pre-round prep, in-round decisions, and post-round reflection
 - **YouTube Integration**: Tips can include relevant instructional videos with thumbnails
 - **Community-Driven**: Share knowledge and discover tips from other golfers
 - **Course-Specific Insights**: Local knowledge and photos for golf courses
@@ -67,6 +68,7 @@ Comprehensive documentation is available in the `/docs` folder:
 
 - Visit the hosted app at `https://your-domain.example`.
 - Create a free account and log in to start saving and discovering tips.
+- Start a coach session for personalized guidance before, during, and after rounds.
 - AI-generated tips are an optional paid add-on; no local setup or keys required. Pricing and activation flow will be provided in-app.
 
 ## For Developers & Contributors
@@ -158,6 +160,7 @@ This is an open-source learning project exploring:
 - Rails 8's "No PaaS Required" philosophy
 - Modern PWA development with Rails
 - AI integration for content generation
+- Conversational coaching workflows embedded directly in the app experience
 - Community-driven knowledge sharing
 - Simplified deployment strategies
 

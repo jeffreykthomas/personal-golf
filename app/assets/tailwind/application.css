@@ -1,22 +1,22 @@
 @import 'tailwindcss';
 
-:root {
-  /* Golf Green Colors */
-  --color-golf-green-50: #f0fdf4;
-  --color-golf-green-500: #22c55e;
-  --color-golf-green-600: #16a34a;
-  --color-golf-green-700: #15803d;
+@theme {
+  /* Primary Accent — bright blue */
+  --color-accent-50: #eff6ff;
+  --color-accent-400: #60a5fa;
+  --color-accent-500: #3b82f6;
+  --color-accent-600: #2563eb;
+  --color-accent-700: #1d4ed8;
 
-  /* Dark Theme Colors */
-  --color-dark-bg: #000000;
-  --color-dark-surface: #1a1a1a;
-  --color-dark-card: #262626;
-  --color-dark-border: #2a2a2a;
-  --color-dark-text: #f5f5f5;
-  --color-dark-text-muted: #a3a3a3;
+  /* Dark Theme — deep navy palette */
+  --color-dark-bg: #0B1929;
+  --color-dark-surface: #122240;
+  --color-dark-card: #162D50;
+  --color-dark-border: #1E3A5F;
+  --color-dark-text: #f0f4f8;
+  --color-dark-text-muted: #94a3b8;
 
-  /* Accent Colors */
-  --color-accent-blue: #3b82f6;
+  /* Secondary Accents */
   --color-accent-amber: #f59e0b;
   --color-warning-red: #ef4444;
 }
@@ -29,15 +29,15 @@
     width: 10rem;
     height: 10rem;
     margin: 0 auto 2rem;
-    background: radial-gradient(circle at 30% 30%, #ffffff, #e5e7eb);
+    background: radial-gradient(circle at 30% 30%, #ffffff, #cbd5e1);
     border-radius: 50%;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1), 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1), 0 10px 30px rgba(0, 0, 0, 0.4);
   }
 
   .golf-ball-dimples {
     position: absolute;
     inset: 0;
-    opacity: 0.2;
+    opacity: 0.15;
     background-image: radial-gradient(circle at 20% 80%, #000 1px, transparent 1px),
       radial-gradient(circle at 80% 20%, #000 1px, transparent 1px),
       radial-gradient(circle at 40% 40%, #000 1px, transparent 1px);
@@ -55,15 +55,15 @@
 
   /* Button Utilities */
   .btn-primary {
-    background-color: #22c55e;
-    color: #111827;
+    background-color: var(--color-accent-500);
+    color: #ffffff;
     font-weight: 600;
     padding: 1rem 1.5rem;
     border-radius: 1rem;
     transition: background-color 0.15s;
 
     &:hover {
-      background-color: #16a34a;
+      background-color: var(--color-accent-600);
     }
   }
 
@@ -78,16 +78,88 @@
     transition: background-color 0.15s;
 
     &:hover {
-      background-color: #1f2937;
+      background-color: var(--color-dark-card);
     }
   }
 
   /* Tabs: active state pill */
   .tabs .tab.active {
-    background-color: #00dc82; /* accent green */
-    color: #000000 !important; /* black text for contrast */
-    border-radius: 9999px; /* pill */
-    box-shadow: 0 2px 8px rgba(0, 220, 130, 0.35);
+    background-color: var(--color-accent-500);
+    color: #ffffff !important;
+    border-radius: 9999px;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+  }
+
+  .coach-icon-btn {
+    border: 1px solid var(--color-dark-border);
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    color: var(--color-dark-text-muted);
+    background-color: rgba(255, 255, 255, 0.04);
+    transition: all 0.15s ease;
+  }
+
+  .coach-icon-btn:hover {
+    color: #ffffff;
+    border-color: var(--color-accent-500);
+  }
+
+  .coach-icon-btn-active {
+    color: #ffffff;
+    border-color: var(--color-accent-500);
+    background-color: rgba(59, 130, 246, 0.25);
+  }
+
+  /* Bottom Navigation */
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0;
+    color: var(--color-dark-text-muted);
+    transition: color 0.15s ease;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+  }
+
+  .bottom-nav-item:hover,
+  .bottom-nav-active {
+    color: var(--color-accent-500);
+  }
+
+  .coach-nav-button {
+    position: relative;
+    padding-top: 0;
+  }
+
+  .coach-nav-orb {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-accent-500), var(--color-accent-600));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-top: -0.75rem;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .coach-nav-button:hover .coach-nav-orb,
+  .coach-nav-button.bottom-nav-active .coach-nav-orb {
+    transform: scale(1.08);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.55);
+  }
+
+  .coach-nav-button.bottom-nav-active .coach-nav-orb {
+    background: linear-gradient(135deg, var(--color-accent-400), var(--color-accent-500));
   }
 }
 
@@ -115,20 +187,25 @@
 
   .text-body {
     font-size: 1rem;
-    color: #d1d5db;
+    color: #cbd5e1;
   }
 
   .text-caption {
     font-size: 0.875rem;
-    color: #9ca3af;
+    color: #94a3b8;
   }
 
   .text-label {
     font-size: 0.75rem;
     font-weight: 500;
-    color: #6b7280;
+    color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+  }
+
+  /* Safe area padding for notched devices */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   /* Focus Ring Utility */
@@ -136,7 +213,7 @@
     outline: none;
 
     &:focus {
-      box-shadow: 0 0 0 2px var(--color-dark-bg), 0 0 0 4px #22c55e;
+      box-shadow: 0 0 0 2px var(--color-dark-bg), 0 0 0 4px var(--color-accent-500);
     }
   }
 }
@@ -195,5 +272,5 @@ html {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #525252;
+  background: #2d4a6f;
 }

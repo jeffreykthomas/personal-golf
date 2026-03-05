@@ -18,3 +18,9 @@ end
 # Handle CSRF protection for OAuth
 OmniAuth.config.allowed_request_methods = [:post, :get]
 OmniAuth.config.silence_get_warning = true
+
+# Use a canonical host in production to avoid Google redirect_uri mismatches
+# when requests come from alternate hosts (for example, www subdomain).
+oauth_full_host = ENV["OMNIAUTH_FULL_HOST"].presence
+oauth_full_host ||= "https://golf-tip.org" if Rails.env.production?
+OmniAuth.config.full_host = oauth_full_host if oauth_full_host.present?

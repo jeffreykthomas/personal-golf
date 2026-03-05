@@ -10,7 +10,7 @@ class UsersController < ApplicationController
     
     if @user.save
       start_new_session_for(@user)
-      redirect_to onboarding_skill_level_path, notice: "Welcome to Personal Golf!"
+      redirect_to onboarding_coach_interview_path, notice: "Welcome to Personal Golf!"
     else
       render :new, status: :unprocessable_entity
     end

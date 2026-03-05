@@ -43,3 +43,5 @@ config/application.yml
 
 /config/credentials/development.key
 .env
+
+claw-service/node_modules

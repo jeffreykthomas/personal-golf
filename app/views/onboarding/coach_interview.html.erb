@@ -1,0 +1,32 @@
+<div class="min-h-screen bg-dark-bg px-6 py-12">
+  <div class="max-w-2xl mx-auto">
+    <div class="text-center mb-8">
+      <h1 class="text-title mb-2">Meet Your Golf Coach</h1>
+      <p class="text-body">
+        We will run a quick 5-question interview so your coach can personalize tips,
+        in-round guidance, and post-round debriefs.
+      </p>
+    </div>
+
+    <div class="bg-dark-card border border-dark-border rounded-2xl p-6">
+      <h2 class="text-heading mb-3">How this works</h2>
+      <ul class="text-body space-y-2">
+        <li>- Answer five quick questions in the coach chat.</li>
+        <li>- Your coach learns your game and updates your profile.</li>
+        <li>- You can ask for tips, and save or dismiss them directly in chat.</li>
+      </ul>
+
+      <div class="mt-6 rounded-xl bg-dark-surface border border-dark-border p-4">
+        <p class="text-caption">
+          Tip: tap the Coach button in the bottom nav to start.
+          It should open automatically on this page.
+        </p>
+      </div>
+
+      <div class="mt-6 flex flex-wrap gap-3">
+        <%= link_to "Skip onboarding", onboarding_skip_path, data: { turbo_method: :post }, class: "btn-secondary" %>
+        <%= link_to "Continue to tips", tips_path, class: "btn-secondary" %>
+      </div>
+    </div>
+  </div>
+</div>

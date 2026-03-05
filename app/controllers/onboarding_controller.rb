@@ -8,9 +8,13 @@ class OnboardingController < ApplicationController
       if current_user.onboarding_completed?
         redirect_to tips_path
       else
-        redirect_to onboarding_skill_level_path
+        redirect_to onboarding_coach_interview_path
       end
     end
+  end
+
+  def coach_interview
+    @coach_onboarding_mode = true
   end
 
   def skill_level

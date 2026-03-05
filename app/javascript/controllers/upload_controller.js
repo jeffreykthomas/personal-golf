@@ -77,17 +77,17 @@ export default class extends Controller {
   dragOver(event) {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'copy';
-    this.zoneTarget.classList.add('ring-2', 'ring-[#00dc82]');
+    this.zoneTarget.classList.add('ring-2', 'ring-accent-500');
   }
 
   dragLeave(event) {
     event.preventDefault();
-    this.zoneTarget.classList.remove('ring-2', 'ring-[#00dc82]');
+    this.zoneTarget.classList.remove('ring-2', 'ring-accent-500');
   }
 
   drop(event) {
     event.preventDefault();
-    this.zoneTarget.classList.remove('ring-2', 'ring-[#00dc82]');
+    this.zoneTarget.classList.remove('ring-2', 'ring-accent-500');
     const files = event.dataTransfer.files;
     if (files && files.length > 0 && this.hasInputTarget) {
       const file = files[0];

@@ -1,5 +1,5 @@
 // Service Worker with aggressive caching for instant loading
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `personal-golf-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
@@ -30,7 +30,7 @@ const CACHE_STRATEGIES = {
     '.woff2',
   ],
   // Network first for API and dynamic content
-  networkFirst: ['/tips', '/api/', '/auth/', '/sessions', '/users'],
+  networkFirst: ['/tips', '/api/', '/auth/', '/sessions', '/users', '/coach_sessions', '/coach_voice', '/cable'],
   // Stale while revalidate for everything else
   staleWhileRevalidate: ['/'],
 };

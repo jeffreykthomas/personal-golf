@@ -11,6 +11,60 @@
     <p class="text-body mb-6"><%= @course.description %></p>
   <% end %>
 
+  <button
+    type="button"
+    class="mb-6 px-4 py-2.5 rounded-xl bg-accent-500/15 border border-accent-500/30 text-accent-400 text-sm font-medium hover:bg-accent-500/25 transition-colors"
+    data-action="coach-launcher#open">
+    Ask Coach about this course
+  </button>
+
+  <div class="mb-6 p-4 border border-dark-border rounded-xl bg-dark-card/60">
+    <h3 class="text-white font-semibold mb-3">External Course Stats (GolfCourseAPI)</h3>
+    <% if @golfcourseapi_configured && @external_course_stats.present? %>
+      <% tee = @external_course_stats[:featured_tee] || {} %>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div class="bg-dark-card rounded-lg border border-dark-border p-3">
+          <div class="text-caption">Club</div>
+          <div class="text-white font-medium"><%= @external_course_stats[:club_name] || "-" %></div>
+        </div>
+        <div class="bg-dark-card rounded-lg border border-dark-border p-3">
+          <div class="text-caption">Featured Tee</div>
+          <div class="text-white font-medium"><%= tee[:tee_name] || "-" %></div>
+        </div>
+        <div class="bg-dark-card rounded-lg border border-dark-border p-3">
+          <div class="text-caption">Par (Tee)</div>
+          <div class="text-white font-medium"><%= tee[:par_total] || "-" %></div>
+        </div>
+        <div class="bg-dark-card rounded-lg border border-dark-border p-3">
+          <div class="text-caption">Yards (Tee)</div>
+          <div class="text-white font-medium"><%= tee[:total_yards] || "-" %></div>
+        </div>
+        <div class="bg-dark-card rounded-lg border border-dark-border p-3">
+          <div class="text-caption">Course Rating</div>
+          <div class="text-white font-medium"><%= tee[:course_rating] || "-" %></div>
+        </div>
+        <div class="bg-dark-card rounded-lg border border-dark-border p-3">
+          <div class="text-caption">Slope Rating</div>
+          <div class="text-white font-medium"><%= tee[:slope_rating] || "-" %></div>
+        </div>
+      </div>
+      <p class="text-caption mt-3">
+        Tee variants: <%= @external_course_stats.dig(:tee_counts, :male).to_i %> male / <%= @external_course_stats.dig(:tee_counts, :female).to_i %> female
+      </p>
+    <% elsif @golfcourseapi_configured %>
+      <p class="text-caption">No matching GolfCourseAPI course was found for this course name/location yet.</p>
+    <% else %>
+      <p class="text-caption">Set <code>GOLFCOURSEAPI_API_KEY</code> (or credentials <code>golfcourseapi.api_key</code>) to show external course stats.</p>
+    <% end %>
+    <div class="mt-4">
+      <%= button_to 'Sync Hole Stats & Location',
+          sync_external_stats_course_path(@course),
+          method: :post,
+          class: 'btn btn-primary',
+          data: { turbo_confirm: 'Sync hole par/yardage and update course location from GolfCourseAPI?' } %>
+    </div>
+  </div>
+
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
     <% @holes.each do |hole| %>
       <%= link_to hole_course_path(@course, number: hole.number), class: "block bg-dark-card rounded-xl p-4 border border-dark-border hover:border-golf-green-500 text-center" do %>
@@ -44,5 +98,3 @@
     </div>
   </div>
 </div>
-
-

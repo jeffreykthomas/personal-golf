@@ -4,7 +4,7 @@
   <div class="max-w-md mx-auto">
     <!-- Back button -->
     <%= link_to onboarding_welcome_path, 
-        class: "inline-flex items-center text-gray-400 hover:text-white mb-8 transition-colors" do %>
+        class: "inline-flex items-center text-dark-text-muted hover:text-white mb-8 transition-colors" do %>
       <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
       </svg>
@@ -28,7 +28,7 @@
         <%= f.label :name, "What should we call you?", class: "block text-label mb-2" %>
         <%= f.text_field :name, 
             placeholder: "Your name",
-            class: "w-full bg-dark-surface border border-dark-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus-ring",
+            class: "w-full bg-dark-surface border border-dark-border rounded-xl px-4 py-3 text-white placeholder-dark-text-muted focus-ring",
             autofocus: true %>
       </div>
 
@@ -45,7 +45,7 @@
                   skill_selector_target: "radio"
                 } %>
             
-            <div class="w-full bg-dark-card border border-dark-border rounded-2xl p-6 transition-all duration-300 hover:border-golf-green-500/50 peer-checked:border-golf-green-500 peer-checked:bg-dark-surface">
+            <div class="w-full bg-dark-card border border-dark-border rounded-2xl p-6 transition-all duration-300 hover:border-accent-500/50 peer-checked:border-accent-500 peer-checked:bg-dark-surface">
               <div class="flex items-center justify-between">
                 <div>
                   <h3 class="text-heading mb-1"><%= level.humanize %></h3>
@@ -62,8 +62,8 @@
                 </div>
                 
                 <!-- Selection indicator -->
-                <div class="indicator-ring w-6 h-6 border-2 rounded-full flex items-center justify-center transition-all border-gray-500">
-                  <div class="radio-indicator w-3 h-3 rounded-full transition-all hidden" style="background-color: #22c55e;"></div>
+                <div class="indicator-ring w-6 h-6 border-2 rounded-full flex items-center justify-center transition-all border-dark-text-muted">
+                  <div class="radio-indicator w-3 h-3 rounded-full transition-all hidden" style="background-color: #3b82f6;"></div>
                 </div>
               </div>
             </div>
@@ -78,7 +78,7 @@
             placeholder: "Enter your handicap",
             min: 0,
             max: 54,
-            class: "w-full bg-dark-surface border border-dark-border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus-ring" %>
+            class: "w-full bg-dark-surface border border-dark-border rounded-xl px-4 py-3 text-white placeholder-dark-text-muted focus-ring" %>
         <p class="text-caption mt-1">If you have an official handicap</p>
       </div>
 
@@ -92,14 +92,14 @@
     <%= button_to "Skip for now", 
         onboarding_skip_path,
         method: :post,
-        class: "block text-center mt-4 text-gray-400 hover:text-white transition-colors text-sm w-full bg-transparent border-0 cursor-pointer",
+        class: "block text-center mt-4 text-dark-text-muted hover:text-white transition-colors text-sm w-full bg-transparent border-0 cursor-pointer",
         form: { data: { turbo_confirm: "Skip onboarding? You can complete your profile later from settings." } } %>
 
     <!-- Progress indicator -->
     <div class="flex justify-center space-x-2 mt-8">
-      <div class="w-3 h-3 bg-gray-600 rounded-full"></div>
-      <div class="w-3 h-3 bg-golf-green-500 rounded-full"></div>
-      <div class="w-3 h-3 bg-gray-600 rounded-full"></div>
+      <div class="w-3 h-3 bg-dark-border rounded-full"></div>
+      <div class="w-3 h-3 bg-accent-500 rounded-full"></div>
+      <div class="w-3 h-3 bg-dark-border rounded-full"></div>
     </div>
   </div>
 </div>

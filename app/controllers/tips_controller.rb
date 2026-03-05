@@ -5,6 +5,11 @@ class TipsController < ApplicationController
   def index
     @tips = current_user.saved_tip_items.includes(:category, :user)
     @next_tip = find_next_tip
+    @coach_context_override = {
+      saved_tips_count: @tips.count,
+      dismissed_tips_count: current_user.dismissed_tips.count,
+      current_tip_id: @next_tip&.id
+    }
   end
 
   def next

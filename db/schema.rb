@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_02_035256) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_04_110300) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -46,6 +46,50 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_035256) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_categories_on_slug", unique: true
+  end
+
+  create_table "coach_messages", force: :cascade do |t|
+    t.integer "coach_session_id", null: false
+    t.integer "tip_id"
+    t.integer "role", default: 0, null: false
+    t.integer "modality", default: 0, null: false
+    t.text "content", null: false
+    t.json "metadata", default: {}, null: false
+    t.string "request_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["coach_session_id", "created_at"], name: "idx_coach_messages_session_created_at"
+    t.index ["coach_session_id"], name: "index_coach_messages_on_coach_session_id"
+    t.index ["request_id"], name: "index_coach_messages_on_request_id"
+    t.index ["tip_id"], name: "index_coach_messages_on_tip_id"
+  end
+
+  create_table "coach_profiles", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.json "profile_data", default: {}, null: false
+    t.text "summary"
+    t.integer "learned_facts_count", default: 0, null: false
+    t.datetime "last_synced_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_coach_profiles_on_user_id", unique: true
+  end
+
+  create_table "coach_sessions", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "phase", default: 0, null: false
+    t.integer "status", default: 0, null: false
+    t.string "title"
+    t.json "context_data", default: {}, null: false
+    t.string "external_session_id"
+    t.datetime "started_at"
+    t.datetime "ended_at"
+    t.datetime "last_activity_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["external_session_id"], name: "index_coach_sessions_on_external_session_id"
+    t.index ["user_id", "status", "phase"], name: "idx_coach_sessions_user_status_phase"
+    t.index ["user_id"], name: "index_coach_sessions_on_user_id"
   end
 
   create_table "courses", force: :cascade do |t|
@@ -299,6 +343,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_02_035256) do
     t.index ["skill_level"], name: "index_users_on_skill_level"
   end
 
+  add_foreign_key "coach_messages", "coach_sessions"
+  add_foreign_key "coach_messages", "tips"
+  add_foreign_key "coach_profiles", "users"
+  add_foreign_key "coach_sessions", "users"
   add_foreign_key "dismissed_tips", "tips"
   add_foreign_key "dismissed_tips", "users"
   add_foreign_key "hole_image_votes", "hole_images"

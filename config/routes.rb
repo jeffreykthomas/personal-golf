@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   # Onboarding flow
   namespace :onboarding do
     get :welcome
+    get :coach_interview
     get :skill_level
     patch :skill_level, action: :update_skill_level
     get :goals
@@ -41,6 +42,7 @@ Rails.application.routes.draw do
   resources :courses, only: [:index, :show, :new, :create, :destroy] do
     member do
       post :generate_holes
+      post :sync_external_stats
       get 'holes/:number', to: 'courses#hole', as: :hole
       patch 'holes/:number', to: 'courses#update_hole', as: :update_hole
       post 'holes/:number/tees', to: 'courses#create_hole_tee', as: :hole_tees
@@ -54,6 +56,25 @@ Rails.application.routes.draw do
   end
 
   resources :categories, only: [:index, :show]
+
+  resources :coach_sessions, only: [:create, :show] do
+    member do
+      post :complete_onboarding
+      post :debrief
+    end
+
+    resources :coach_messages, only: [:create]
+
+    resource :coach_tip_actions, only: [] do
+      post :recommend
+      post :save
+      post :dismiss
+    end
+  end
+
+  post "coach_voice/signed_url", to: "coach_voice_sessions#signed_url"
+  post "coach_voice/transcribe", to: "coach_voice_sessions#transcribe"
+  post "coach_voice/synthesize", to: "coach_voice_sessions#synthesize"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

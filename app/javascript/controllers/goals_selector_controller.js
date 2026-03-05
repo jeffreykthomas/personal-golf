@@ -43,14 +43,14 @@ export default class extends Controller {
 
       // Update checkbox indicator with inline styles
       if (checkboxIndicator) {
-        checkboxIndicator.style.borderColor = '#22c55e';
-        checkboxIndicator.style.backgroundColor = '#22c55e';
+        checkboxIndicator.style.borderColor = '#3b82f6';
+        checkboxIndicator.style.backgroundColor = '#3b82f6';
       }
 
       // Update card appearance with inline styles
       if (card) {
-        card.style.borderColor = '#22c55e';
-        card.style.backgroundColor = '#1a1a1a';
+        card.style.borderColor = '#3b82f6';
+        card.style.backgroundColor = '#122240';
       }
     } else {
       // Hide checkmark

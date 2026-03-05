@@ -30,7 +30,7 @@
               required: true,
               autofocus: true,
               placeholder: "alexsmith.mobbin+1@gmail.com",
-              class: "w-full bg-transparent border border-dark-border rounded-full px-6 py-4 text-dark-text placeholder-dark-text-muted focus:outline-none focus:border-dark-text-muted text-lg" %>
+              class: "w-full bg-transparent border border-dark-border rounded-full px-6 py-4 text-dark-text placeholder-dark-text-muted focus:outline-none focus:border-accent-500 text-lg" %>
         </div>
 
         <!-- Password field -->
@@ -38,12 +38,12 @@
           <%= f.password_field :password, 
               required: true,
               placeholder: "Password",
-              class: "w-full bg-transparent border border-dark-border rounded-full px-6 py-4 text-dark-text placeholder-dark-text-muted focus:outline-none focus:border-dark-text-muted text-lg" %>
+              class: "w-full bg-transparent border border-dark-border rounded-full px-6 py-4 text-dark-text placeholder-dark-text-muted focus:outline-none focus:border-accent-500 text-lg" %>
         </div>
 
         <!-- Submit button -->
         <%= f.submit "Continue", 
-            class: "w-full bg-dark-text text-dark-bg rounded-full py-4 font-medium text-lg cursor-pointer hover:opacity-90 transition-opacity relative",
+            class: "w-full bg-accent-500 text-white rounded-full py-4 font-medium text-lg cursor-pointer hover:bg-accent-600 transition-colors relative",
             data: { "signup-form-target": "submit" } %>
       <% end %>
 

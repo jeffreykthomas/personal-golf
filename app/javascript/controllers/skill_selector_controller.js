@@ -36,13 +36,13 @@ export default class extends Controller {
 
         // Update card appearance with inline styles
         if (card) {
-          card.style.borderColor = '#22c55e';
-          card.style.backgroundColor = '#1a1a1a';
+          card.style.borderColor = '#3b82f6';
+          card.style.backgroundColor = '#122240';
         }
 
         // Update indicator ring
         if (indicatorRing) {
-          indicatorRing.style.borderColor = '#22c55e';
+          indicatorRing.style.borderColor = '#3b82f6';
         }
       } else {
         // Hide the indicator

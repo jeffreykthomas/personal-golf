@@ -141,9 +141,9 @@ class GenerateTipsJob < ApplicationJob
   
   def notification_html(count)
     <<~HTML
-      <div class="notification bg-golf-green-100 border border-golf-green-300 text-golf-green-800 px-4 py-2 rounded-lg mb-2">
+      <div class="notification bg-accent-500/10 border border-accent-500/30 text-accent-400 px-4 py-2 rounded-lg mb-2">
         <span class="font-medium">🎯 #{count} new personalized tip#{'s' if count != 1} generated!</span>
-        <button onclick="this.parentElement.remove()" class="float-right text-golf-green-600 hover:text-golf-green-800">×</button>
+        <button onclick="this.parentElement.remove()" class="float-right text-accent-500 hover:text-accent-400">×</button>
       </div>
     HTML
   end

@@ -1,6 +1,6 @@
 class CoursesController < ApplicationController
   # Removed forced onboarding - users can navigate freely
-  before_action :set_course, only: [:show, :hole, :update_hole, :create_hole_tee, :update_hole_tee, :destroy_hole_tee, :upload_layout, :vote_image, :redo_stylization, :destroy_hole_image, :destroy, :generate_holes]
+  before_action :set_course, only: [:show, :hole, :update_hole, :create_hole_tee, :update_hole_tee, :destroy_hole_tee, :upload_layout, :vote_image, :redo_stylization, :destroy_hole_image, :destroy, :generate_holes, :sync_external_stats]
   before_action :set_hole, only: [:hole, :update_hole, :upload_layout]
 
   def index
@@ -44,10 +44,48 @@ class CoursesController < ApplicationController
 
   def show
     @holes = @course.holes.order(:number)
+    @golfcourseapi_configured = GolfCourseApiService.configured?
+    @external_course_stats = GolfCourseApiService.fetch_course_stats(
+      course_name: @course.name,
+      location: @course.location
+    )
+    @coach_context_override = {
+      hole_count: @holes.count,
+      course_location: @course.location
+    }
   end
 
   def hole
     @display_image = @hole.select_image_for_display
+    @mapbox_access_token = Rails.application.credentials.dig(:mapbox, :access_token) || ENV['MAPBOX_ACCESS_TOKEN']
+    @external_course_stats = GolfCourseApiService.fetch_course_stats(
+      course_name: @course.name,
+      location: @course.location
+    )
+    @hole_map_payload = {
+      course: {
+        id: @course.id,
+        name: @course.name,
+        location: @course.location,
+        coordinates: {
+          lat: @external_course_stats&.dig(:location, 'latitude'),
+          lng: @external_course_stats&.dig(:location, 'longitude')
+        }
+      },
+      hole: {
+        number: @hole.number,
+        par: @hole.par,
+        yardage: @hole.yardage
+      },
+      targets: [],
+      polygons: []
+    }
+    @coach_context_override = {
+      hole_number: @hole.number,
+      hole_par: @hole.par,
+      hole_yardage: @hole.yardage,
+      map_coordinates_present: @hole_map_payload.dig(:course, :coordinates, :lat).present?
+    }
     
     # Find category with caching since it's static data
     course_tip_category = Rails.cache.fetch('category_course_tip', expires_in: 1.hour) do
@@ -81,6 +119,54 @@ class CoursesController < ApplicationController
     
     @hole_image_stream = "hole_#{@hole.id}_images"
     @hole_flash_stream = "hole_#{@hole.id}_flash"
+  end
+
+  def sync_external_stats
+    unless GolfCourseApiService.configured?
+      redirect_to @course, alert: 'GolfCourseAPI key not configured.'
+      return
+    end
+
+    external = GolfCourseApiService.fetch_course_stats(
+      course_name: @course.name,
+      location: @course.location,
+      force_refresh: true
+    )
+    unless external.present?
+      redirect_to @course, alert: 'No matching GolfCourseAPI course found.'
+      return
+    end
+
+    location_parts = [
+      external.dig(:location, 'city'),
+      external.dig(:location, 'state')
+    ].compact.map(&:to_s).map(&:strip).reject(&:blank?)
+    canonical_location = location_parts.join(', ')
+
+    updated_holes = 0
+    ActiveRecord::Base.transaction do
+      if canonical_location.present? && canonical_location != @course.location
+        @course.update!(location: canonical_location)
+      end
+
+      Array(external[:hole_stats]).each do |hole_stat|
+        next unless hole_stat[:number]
+
+        hole = @course.holes.find_or_initialize_by(number: hole_stat[:number])
+        hole.par = hole_stat[:par] if hole_stat[:par].present?
+        hole.yardage = hole_stat[:yardage] if hole_stat[:yardage].present?
+
+        if hole.new_record? || hole.changed?
+          hole.save!
+          updated_holes += 1
+        end
+      end
+    end
+
+    redirect_to @course, notice: "Synced external stats. Updated #{updated_holes} hole records."
+  rescue => e
+    Rails.logger.error("Failed to sync GolfCourseAPI stats for course #{@course.id}: #{e.class} - #{e.message}")
+    redirect_to @course, alert: 'Failed to sync external stats.'
   end
 
   def vote_image

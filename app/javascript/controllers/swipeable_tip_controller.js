@@ -218,7 +218,7 @@ export default class extends Controller {
 
   showFeedback(message, type = 'success') {
     const colors = {
-      success: 'bg-golf-green-500',
+      success: 'bg-accent-500',
       error: 'bg-red-500',
       neutral: 'bg-gray-500',
     };

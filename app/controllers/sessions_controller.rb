@@ -29,7 +29,7 @@ class SessionsController < ApplicationController
       if user.onboarding_completed?
         redirect_to after_authentication_url, notice: "Successfully signed in with Google!"
       else
-        redirect_to onboarding_skill_level_path, notice: "Welcome to Personal Golf!"
+        redirect_to onboarding_coach_interview_path, notice: "Welcome to Personal Golf!"
       end
     else
       redirect_to new_session_path, alert: "There was an error signing you in with Google."

@@ -6,6 +6,8 @@ class User < ApplicationRecord
   has_many :saved_tip_items, through: :saved_tips, source: :tip
   has_many :dismissed_tips, dependent: :destroy
   has_many :dismissed_tip_items, through: :dismissed_tips, source: :tip
+  has_many :coach_sessions, dependent: :destroy
+  has_one :coach_profile, dependent: :destroy
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
   
@@ -63,7 +65,8 @@ class User < ApplicationRecord
       saved_tips_count: saved_tips.count,
       favorite_categories: favorite_categories_for_ai,
       experience_level: experience_level_for_ai,
-      created_days_ago: (Date.current - created_at.to_date).to_i
+      created_days_ago: (Date.current - created_at.to_date).to_i,
+      coach_facts: coach_profile&.profile_data || {}
     }
   end
   

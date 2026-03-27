@@ -12,6 +12,7 @@ export default class extends Controller {
     "mainContent",
     "navButton",
     "messages",
+    "messagesSpacer",
     "input",
     "form",
     "status",
@@ -36,10 +37,18 @@ export default class extends Controller {
     this.voiceClient = null;
     this.speakerOn = false;
     this.micOn = false;
-    this.streamingBubble = null;
+    this.streamingBubbleByRequestId = new Map();
+    this.subscriptionConnected = false;
+    this.subscriptionConnectedPromise = null;
+    this.resolveSubscriptionConnected = null;
+    this.requestIdsWithStreamEvents = new Set();
+    this.completedRequestIds = new Set();
+    this.lastDeltaSequenceByRequestId = new Map();
     this.latestTipId = null;
 
     this.renderStatus("");
+    this.ensureMessagesSpacer();
+    this.autoGrowInput();
     this.updateVoiceButtons();
     this.openFromEvent = () => this.open();
     window.addEventListener("coach:open", this.openFromEvent);
@@ -53,6 +62,9 @@ export default class extends Controller {
     window.removeEventListener("coach:open", this.openFromEvent);
     this.subscription?.unsubscribe();
     this.subscription = null;
+    this.subscriptionConnected = false;
+    this.subscriptionConnectedPromise = null;
+    this.resolveSubscriptionConnected = null;
     this.voiceClient?.disconnect();
     this.voiceClient = null;
   }
@@ -120,15 +132,29 @@ export default class extends Controller {
       return;
     }
 
+    this.subscriptionConnected = false;
+    this.subscriptionConnectedPromise = new Promise((resolve) => {
+      this.resolveSubscriptionConnected = resolve;
+    });
+
     this.subscription = subscribeToCoachSession(this.sessionId, {
-      connected: () => this.renderStatus("Connected"),
-      disconnected: () => this.renderStatus("Disconnected"),
+      connected: () => {
+        this.subscriptionConnected = true;
+        this.resolveSubscriptionConnected?.();
+        this.resolveSubscriptionConnected = null;
+        this.renderStatus("Connected");
+      },
+      disconnected: () => {
+        this.subscriptionConnected = false;
+        this.renderStatus("Disconnected");
+      },
       received: (data) => this.handleStreamEvent(data),
     });
   }
 
   renderHistory(messages) {
     this.messagesTarget.innerHTML = "";
+    this.ensureMessagesSpacer();
     messages.forEach((message) => this.appendMessageBubble(message.role, message.content));
     this.scrollMessagesToBottom();
   }
@@ -139,8 +165,7 @@ export default class extends Controller {
       ? "ml-auto max-w-[85%] rounded-2xl bg-accent-500 px-4 py-2.5 text-sm text-white"
       : "max-w-[85%] rounded-2xl bg-dark-surface border border-dark-border px-4 py-2.5 text-sm text-dark-text";
     bubble.textContent = content;
-    this.messagesTarget.appendChild(bubble);
-    this.scrollMessagesToBottom();
+    this.appendToMessages(bubble);
     return bubble;
   }
 
@@ -152,8 +177,20 @@ export default class extends Controller {
     }
 
     await this.ensureSession();
+    if (!this.sessionId) {
+      return;
+    }
+    await this.waitForSubscriptionReady();
+
+    const requestId = this.createRequestId();
+    this.requestIdsWithStreamEvents.delete(requestId);
+    this.completedRequestIds.delete(requestId);
+    this.lastDeltaSequenceByRequestId.delete(requestId);
+
     this.inputTarget.value = "";
-    this.appendMessageBubble("user", content);
+    this.autoGrowInput();
+    const userBubble = this.appendMessageBubble("user", content);
+    this.scrollUserMessageToTop(userBubble);
     this.renderStatus("Coach is thinking...");
 
     if (this.voiceClient && this.speakerOn) {
@@ -167,6 +204,7 @@ export default class extends Controller {
         "X-CSRF-Token": csrfToken(),
       },
       body: JSON.stringify({
+        request_id: requestId,
         context: this.contextValue || {},
         coach_message: {
           content: content,
@@ -181,7 +219,8 @@ export default class extends Controller {
     }
 
     const payload = await response.json();
-    if (!this.subscription && payload.message) {
+    const streamed = this.requestIdsWithStreamEvents.has(requestId) || this.completedRequestIds.has(requestId);
+    if (!streamed && payload.message) {
       this.appendMessageBubble("assistant", payload.message.content);
       this.handleActions(payload.actions || []);
       this.renderStatus("");
@@ -193,30 +232,57 @@ export default class extends Controller {
       return;
     }
 
+    const requestId = data.request_id;
+
     switch (data.event) {
       case "stream_started":
+        if (!requestId) {
+          return;
+        }
+        this.requestIdsWithStreamEvents.add(requestId);
+        this.lastDeltaSequenceByRequestId.set(requestId, -1);
         this.renderStatus("Coach is thinking...");
-        this.streamingBubble = this.appendMessageBubble("assistant", "");
+        this.ensureStreamingBubble(requestId);
         break;
       case "assistant_delta":
-        if (!this.streamingBubble) {
-          this.streamingBubble = this.appendMessageBubble("assistant", "");
+        if (!requestId || this.completedRequestIds.has(requestId)) {
+          return;
         }
-        this.streamingBubble.textContent += data.delta;
-        this.scrollMessagesToBottom();
+        this.requestIdsWithStreamEvents.add(requestId);
+        const incomingSequence = Number.isInteger(data.sequence) ? data.sequence : null;
+        const previousSequence = this.lastDeltaSequenceByRequestId.get(requestId) ?? -1;
+        if (incomingSequence !== null && incomingSequence <= previousSequence) {
+          return;
+        }
+        if (incomingSequence !== null) {
+          this.lastDeltaSequenceByRequestId.set(requestId, incomingSequence);
+        }
+        const bubble = this.ensureStreamingBubble(requestId);
+        bubble.textContent += data.delta;
         break;
       case "assistant_done":
-        if (!this.streamingBubble) {
-          this.streamingBubble = this.appendMessageBubble("assistant", data.message?.content || "");
-        } else if (data.message?.content) {
-          this.streamingBubble.textContent = data.message.content;
+        if (!requestId) {
+          return;
         }
-        this.streamingBubble = null;
+        if (this.completedRequestIds.has(requestId)) {
+          return;
+        }
+        this.requestIdsWithStreamEvents.add(requestId);
+        this.completedRequestIds.add(requestId);
+        const completedBubble = this.streamingBubbleByRequestId.get(requestId);
+        if (!completedBubble) {
+          this.appendMessageBubble("assistant", data.message?.content || "");
+        } else if (data.message?.content) {
+          completedBubble.textContent = data.message.content;
+        }
+        this.streamingBubbleByRequestId.delete(requestId);
         this.handleActions(data.actions || []);
         this.renderStatus("");
         break;
       case "error":
-        this.streamingBubble = null;
+        if (requestId) {
+          this.streamingBubbleByRequestId.delete(requestId);
+        }
         this.renderStatus(data.message || "Coach error");
         break;
       default:
@@ -259,8 +325,7 @@ export default class extends Controller {
     card.querySelector(".coach-tip-save")?.addEventListener("click", (event) => this.saveTipFromCard(event));
     card.querySelector(".coach-tip-dismiss")?.addEventListener("click", (event) => this.dismissTipFromCard(event));
 
-    this.messagesTarget.appendChild(card);
-    this.scrollMessagesToBottom();
+    this.appendToMessages(card);
   }
 
   async saveTipFromCard(event) {
@@ -406,6 +471,86 @@ export default class extends Controller {
     }
     this.statusTarget.textContent = message;
     this.statusTarget.classList.toggle("hidden", !message);
+  }
+
+  autoGrowInput() {
+    if (!this.hasInputTarget) {
+      return;
+    }
+
+    this.inputTarget.style.height = "auto";
+    this.inputTarget.style.height = `${this.inputTarget.scrollHeight}px`;
+  }
+
+  handleInputKeydown(event) {
+    if (event.key !== "Enter" || event.shiftKey || event.isComposing) {
+      return;
+    }
+
+    event.preventDefault();
+    if (this.hasFormTarget) {
+      this.formTarget.requestSubmit();
+    }
+  }
+
+  ensureMessagesSpacer() {
+    if (this.hasMessagesSpacerTarget) {
+      return this.messagesSpacerTarget;
+    }
+
+    const spacer = document.createElement("div");
+    spacer.setAttribute("data-coach-panel-target", "messagesSpacer");
+    spacer.className = "shrink-0";
+    spacer.style.height = "0px";
+    this.messagesTarget.appendChild(spacer);
+    return spacer;
+  }
+
+  appendToMessages(node) {
+    const spacer = this.ensureMessagesSpacer();
+    this.messagesTarget.insertBefore(node, spacer);
+  }
+
+  ensureStreamingBubble(requestId) {
+    const existing = this.streamingBubbleByRequestId.get(requestId);
+    if (existing) {
+      return existing;
+    }
+
+    const bubble = this.appendMessageBubble("assistant", "");
+    this.streamingBubbleByRequestId.set(requestId, bubble);
+    return bubble;
+  }
+
+  scrollUserMessageToTop(bubble) {
+    const spacer = this.ensureMessagesSpacer();
+    const currentSpacerHeight = spacer.offsetHeight;
+    const desiredTopOffset = 8;
+    const targetTop = Math.max(0, bubble.offsetTop - desiredTopOffset);
+    const contentHeightWithoutSpacer = this.messagesTarget.scrollHeight - currentSpacerHeight;
+    const maxScrollWithoutSpacer = Math.max(0, contentHeightWithoutSpacer - this.messagesTarget.clientHeight);
+    const requiredExtraSpace = Math.max(0, targetTop - maxScrollWithoutSpacer);
+
+    spacer.style.height = `${requiredExtraSpace + 16}px`;
+    this.messagesTarget.scrollTop = targetTop;
+  }
+
+  waitForSubscriptionReady(timeoutMs = 1200) {
+    if (this.subscriptionConnected || !this.subscriptionConnectedPromise) {
+      return Promise.resolve();
+    }
+
+    return Promise.race([
+      this.subscriptionConnectedPromise,
+      new Promise((resolve) => window.setTimeout(resolve, timeoutMs)),
+    ]);
+  }
+
+  createRequestId() {
+    if (window.crypto?.randomUUID) {
+      return window.crypto.randomUUID();
+    }
+    return `req_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   }
 
   scrollMessagesToBottom() {

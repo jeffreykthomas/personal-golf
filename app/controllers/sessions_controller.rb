@@ -20,7 +20,7 @@ class SessionsController < ApplicationController
   end
   
   def oauth_create
-    user = User.from_omniauth(request.env["omniauth.auth"])
+    user = User.from_omniauth(request.env["omniauth.auth"], allow_create: false)
     
     if user.persisted?
       start_new_session_for(user)
@@ -32,7 +32,7 @@ class SessionsController < ApplicationController
         redirect_to onboarding_coach_interview_path, notice: "Welcome to Personal Golf!"
       end
     else
-      redirect_to new_session_path, alert: "There was an error signing you in with Google."
+      redirect_to new_session_path, alert: "This account is not authorized. New account creation is temporarily disabled."
     end
   end
   

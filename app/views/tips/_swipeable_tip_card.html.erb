@@ -87,7 +87,7 @@
         <%= tip.category.name %>
       </span>
       <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
-        <%= tip.phase.humanize %>
+        <%= tip_phase_label(tip) %>
       </span>
       <% if tip.hole_number.present? %>
         <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">

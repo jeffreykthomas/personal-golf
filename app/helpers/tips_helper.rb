@@ -32,6 +32,24 @@ module TipsHelper
       '🏌️'
     end
   end
+
+  def tip_phase_key(tip)
+    raw_phase = tip.phase_before_type_cast
+    return raw_phase if raw_phase.is_a?(String) && Tip.phases.key?(raw_phase)
+    return nil if raw_phase.blank?
+
+    Tip.phases.key(raw_phase.to_i)
+  rescue StandardError
+    nil
+  end
+
+  def tip_phase_label(tip)
+    tip_phase_key(tip)&.humanize || "General"
+  end
+  
+  def tip_phase_icon_for(tip)
+    tip_phase_icon(tip_phase_key(tip))
+  end
   
   def skill_level_badge(level)
     colors = {

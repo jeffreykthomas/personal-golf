@@ -4,6 +4,8 @@
 # belong in git's global ignore instead:
 # `$XDG_CONFIG_HOME/git/ignore` or `~/.config/git/ignore`
 
+.DS_Store
+
 # Ignore bundler config.
 /.bundle
 
@@ -45,3 +47,4 @@ config/application.yml
 .env
 
 claw-service/node_modules
+/nanoclaw-golf

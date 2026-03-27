@@ -88,7 +88,7 @@ class User < ApplicationRecord
     end
   end
   
-  def self.from_omniauth(auth)
+  def self.from_omniauth(auth, allow_create: true)
     # First try to find existing user by email
     user = find_by(email_address: auth.info.email)
     
@@ -101,7 +101,7 @@ class User < ApplicationRecord
         google_refresh_token: auth.credentials.refresh_token,
         name: auth.info.name || user.name
       )
-    else
+    elsif allow_create
       # Create new user from OAuth
       user = create!(
         email_address: auth.info.email,

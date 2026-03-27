@@ -1,5 +1,5 @@
 // Service Worker with aggressive caching for instant loading
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v5';
 const CACHE_NAME = `personal-golf-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
@@ -7,8 +7,12 @@ const OFFLINE_URL = '/offline.html';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
-  '/icon.png',
-  '/icon.svg',
+  '/favicon.ico',
+  '/favicon.svg',
+  '/favicon-96x96.png',
+  '/apple-touch-icon.png',
+  '/web-app-manifest-192x192.png',
+  '/web-app-manifest-512x512.png',
   '/sessions/new',
   '/users/new',
   '/offline.html',
@@ -19,9 +23,12 @@ const CACHE_STRATEGIES = {
   // Cache first for assets (CSS, JS, images)
   cacheFirst: [
     '/assets/',
-    '/icon',
+    '/favicon',
+    '/apple-touch-icon',
+    '/web-app-manifest',
     '.css',
     '.js',
+    '.ico',
     '.png',
     '.jpg',
     '.jpeg',
@@ -30,7 +37,16 @@ const CACHE_STRATEGIES = {
     '.woff2',
   ],
   // Network first for API and dynamic content
-  networkFirst: ['/tips', '/api/', '/auth/', '/sessions', '/users', '/coach_sessions', '/coach_voice', '/cable'],
+  networkFirst: [
+    '/tips',
+    '/api/',
+    '/auth/',
+    '/sessions',
+    '/users',
+    '/coach_sessions',
+    '/coach_voice',
+    '/cable',
+  ],
   // Stale while revalidate for everything else
   staleWhileRevalidate: ['/'],
 };
@@ -47,13 +63,13 @@ self.addEventListener('install', (event) => {
             return new Request(url, { cache: 'reload' });
           }).filter((request) => {
             return request.url.startsWith(self.location.origin);
-          })
+          }),
         );
       })
       .then(() => self.skipWaiting())
       .catch((error) => {
         console.error('Failed to cache:', error);
-      })
+      }),
   );
 });
 
@@ -66,12 +82,12 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames
             .filter(
-              (cacheName) => cacheName.startsWith('personal-golf-') && cacheName !== CACHE_NAME
+              (cacheName) => cacheName.startsWith('personal-golf-') && cacheName !== CACHE_NAME,
             )
-            .map((cacheName) => caches.delete(cacheName))
+            .map((cacheName) => caches.delete(cacheName)),
         );
       })
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -110,7 +126,7 @@ self.addEventListener('fetch', (event) => {
           });
           return response;
         });
-      })
+      }),
     );
     return;
   }
@@ -131,7 +147,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           return caches.match(request);
-        })
+        }),
     );
     return;
   }
@@ -161,7 +177,7 @@ self.addEventListener('fetch', (event) => {
         });
 
       return response || fetchPromise;
-    })
+    }),
   );
 });
 
@@ -187,6 +203,6 @@ self.addEventListener('notificationclick', function (event) {
       if (clients.openWindow) {
         return clients.openWindow(event.notification.data.path);
       }
-    })
+    }),
   );
 });

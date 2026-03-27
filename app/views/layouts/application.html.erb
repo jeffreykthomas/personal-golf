@@ -3,7 +3,9 @@
   <head>
     <title><%= content_for(:title) || "Personal Golf" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="theme-color" content="#0B1929">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Personal Golf">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -13,9 +15,11 @@
     <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
     <%= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
 
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
@@ -32,6 +36,10 @@
         <% end %>
         <% if user_signed_in? %>
           <div class="flex items-center gap-3">
+            <%= button_to "Log out",
+                session_path,
+                method: :delete,
+                class: "text-xs text-dark-text-muted hover:text-white transition-colors" %>
             <%= link_to saved_tips_path, class: "relative p-1.5 rounded-full hover:bg-dark-surface transition-colors" do %>
               <svg class="w-5 h-5 text-dark-text-muted" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v13.586l-6-6-6 6V4z"/>
@@ -105,13 +113,14 @@
 
               <div class="px-4 pb-4 pt-2 border-t border-dark-border">
                 <p class="text-caption text-xs mb-2 hidden" data-coach-panel-target="status"></p>
-                <form data-coach-panel-target="form" data-action="submit->coach-panel#sendMessage" class="flex gap-2">
-                  <input
-                    type="text"
-                    class="flex-1 bg-dark-surface border border-dark-border rounded-xl px-4 py-3 text-white placeholder-dark-text-muted focus-ring text-sm"
+                <form data-coach-panel-target="form" data-action="submit->coach-panel#sendMessage" class="flex items-end gap-2">
+                  <textarea
+                    class="flex-1 w-full bg-dark-surface border border-dark-border rounded-xl px-4 py-3 text-white placeholder-dark-text-muted focus-ring text-sm leading-5 resize-none overflow-y-auto min-h-[2.75rem] max-h-36"
                     placeholder="Ask your coach..."
                     data-coach-panel-target="input"
-                    maxlength="600" />
+                    data-action="input->coach-panel#autoGrowInput keydown->coach-panel#handleInputKeydown"
+                    maxlength="600"
+                    rows="1"></textarea>
                   <button type="submit" class="btn-primary !py-3 !px-5 !rounded-xl text-sm">Send</button>
                 </form>
               </div>

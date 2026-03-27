@@ -2,18 +2,11 @@ class UsersController < ApplicationController
   allow_unauthenticated_access only: [:new, :create]
   
   def new
-    @user = User.new
+    redirect_to new_session_path, alert: "New account creation is temporarily disabled."
   end
 
   def create
-    @user = User.new(user_params)
-    
-    if @user.save
-      start_new_session_for(@user)
-      redirect_to onboarding_coach_interview_path, notice: "Welcome to Personal Golf!"
-    else
-      render :new, status: :unprocessable_entity
-    end
+    redirect_to new_session_path, alert: "New account creation is temporarily disabled."
   end
 
   private

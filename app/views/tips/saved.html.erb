@@ -1,85 +1,10 @@
 <div class="container mx-auto p-4 md:p-6 lg:p-8">
   <%= render 'tips/saved_tips_header' %>
 
-  <!-- Content -->
   <main class="px-6 py-6">
-    <% if @saved_tips.any? %>
-      <div class="space-y-4">
-        <% @saved_tips.each do |tip| %>
-          <div id="saved-tip-<%= tip.id %>" class="bg-dark-card rounded-2xl p-6 border border-dark-border">
-            <!-- Category, Phase & Tags -->
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex flex-wrap gap-2 items-center">
-                <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
-                  <%= tip.category.name %>
-                </span>
-                <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
-                  <%= tip_phase_label(tip) %>
-                </span>
-                <% if tip.hole_number.present? %>
-                  <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
-                    Hole <%= tip.hole_number %>
-                  </span>
-                <% end %>
-                <% tip.human_tags.each do |t| %>
-                  <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
-                    <%= t %>
-                  </span>
-                <% end %>
-              </div>
-              <span class="text-caption">
-                <%= tip_phase_icon_for(tip) %> <%= tip_phase_label(tip) %>
-              </span>
-            </div>
-
-            <!-- Content -->
-            <h3 class="text-heading mb-2"><%= tip.title %></h3>
-            <p class="text-body mb-4"><%= truncate(tip.content, length: 150) %></p>
-            
-            <!-- YouTube video thumbnail if available -->
-            <% if tip.has_youtube_video? %>
-              <div class="mb-4">
-                <a href="<%= tip.youtube_url %>" target="_blank" rel="noopener noreferrer" class="block group">
-                  <div class="relative rounded-lg overflow-hidden bg-dark-surface">
-                    <img src="<%= tip.youtube_thumbnail_url %>" 
-                         alt="YouTube video thumbnail" 
-                         class="w-full h-24 object-cover group-hover:scale-105 transition-transform duration-200"
-                         onerror="this.style.display='none'">
-                    <div class="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40 transition-colors">
-                      <div class="bg-red-600 rounded-full p-2 group-hover:scale-110 transition-transform">
-                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <div class="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 py-0.5 rounded text-xs">
-                      Watch
-                    </div>
-                  </div>
-                </a>
-              </div>
-            <% end %>
-
-            <!-- Actions -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-3 text-caption">
-                <span>By <%= tip.user.display_name %></span>
-                <span>•</span>
-                <span><%= time_ago_in_words(tip.created_at) %> ago</span>
-              </div>
-
-              <button class="text-red-400 hover:text-red-300 transition-colors text-sm"
-                      data-turbo-method="delete"
-                      data-turbo-action="replace"
-                      data-href="<%= unsave_tip_path(tip) %>">
-                Remove
-              </button>
-            </div>
-          </div>
-        <% end %>
-      </div>
+    <% if @has_any_saved_tips %>
+      <%= render "tips/saved_tip_list", saved_tips: @saved_tips %>
     <% else %>
-      <!-- Empty state -->
       <div class="text-center py-12">
         <div class="golf-ball-orb w-24 h-24 mb-6 opacity-50">
           <div class="golf-ball-dimples"></div>

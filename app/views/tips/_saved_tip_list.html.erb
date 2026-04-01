@@ -1,9 +1,13 @@
-<% if saved_tips.any? %>
-  <% saved_tips.each do |tip| %>
-    <%= render 'tips/swipeable_tip_card', tip: tip, show_saved_indicator: false %>
+<div id="saved-tips">
+  <% if saved_tips.any? %>
+    <div class="space-y-4">
+      <% saved_tips.each do |tip| %>
+        <%= render "tips/saved_tip_item", tip: tip %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-10">
+      <p class="text-gray-500 dark:text-gray-400">No tips match the selected filter.</p>
+    </div>
   <% end %>
-<% else %>
-  <div class="text-center py-10">
-    <p class="text-gray-500 dark:text-gray-400">No tips match the selected filter.</p>
-  </div>
-<% end %>
+</div>

@@ -1,8 +1,10 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
+  static targets = ['form'];
+
   submit(event) {
-    // Allow Turbo to handle the form submission
-    // This controller can be extended for additional validation or effects
+    const form = this.hasFormTarget ? this.formTarget : event.target.form || this.element;
+    form?.requestSubmit();
   }
 }

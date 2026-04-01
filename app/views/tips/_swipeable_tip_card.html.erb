@@ -84,11 +84,17 @@
     <!-- Category tags -->
     <div class="flex flex-wrap gap-2 mb-6">
       <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
-        <%= tip.category.name %>
+        <%= tip_category_label(tip) %>
       </span>
-      <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
-        <%= tip_phase_label(tip) %>
-      </span>
+      <% if tip.type == "Insight" %>
+        <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
+          <%= tip_source_label(tip) %>
+        </span>
+      <% else %>
+        <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
+          <%= tip_phase_label(tip) %>
+        </span>
+      <% end %>
       <% if tip.hole_number.present? %>
         <span class="px-3 py-1 bg-dark-surface rounded-full text-caption">
           Hole <%= tip.hole_number %>

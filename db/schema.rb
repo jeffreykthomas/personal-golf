@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_04_110300) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_26_170000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -306,7 +306,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_04_110300) do
     t.string "title"
     t.text "content"
     t.integer "user_id", null: false
-    t.integer "category_id", null: false
+    t.integer "category_id"
     t.integer "phase"
     t.integer "skill_level"
     t.integer "save_count"
@@ -318,8 +318,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_04_110300) do
     t.text "tags"
     t.integer "hole_number"
     t.integer "course_id"
+    t.string "type"
+    t.integer "source", default: 0, null: false
     t.index ["category_id"], name: "index_tips_on_category_id"
     t.index ["course_id"], name: "index_tips_on_course_id"
+    t.index ["source"], name: "index_tips_on_source"
+    t.index ["type"], name: "index_tips_on_type"
     t.index ["user_id"], name: "index_tips_on_user_id"
     t.index ["youtube_url"], name: "index_tips_on_youtube_url"
   end

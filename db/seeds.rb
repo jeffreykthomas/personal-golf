@@ -11,7 +11,13 @@ categories = [
   { name: 'Mental Game', slug: 'mental-game', description: 'Psychology and focus techniques' },
   { name: 'Course Management', slug: 'course-management', description: 'Strategic play and decision making' },
   { name: 'Course Tip', slug: 'course-tip', description: 'Tips about specific holes on a golf course' },
-  { name: 'Practice', slug: 'practice', description: 'Effective practice routines and drills' }
+  { name: 'Practice', slug: 'practice', description: 'Effective practice routines and drills' },
+  { name: 'Preferences', slug: 'preferences', description: 'Likes, dislikes, and personal preferences' },
+  { name: 'Strengths', slug: 'strengths', description: 'Personal strengths and capabilities' },
+  { name: 'Goals', slug: 'goals', description: 'Life and personal goals' },
+  { name: 'Health & Wellness', slug: 'health-wellness', description: 'Health, fitness, and wellbeing notes' },
+  { name: 'Lifestyle', slug: 'lifestyle', description: 'Daily routines, habits, and lifestyle patterns' },
+  { name: 'Memories', slug: 'memories', description: 'Important moments and recollections' }
 ].map do |cat_data|
   Category.find_or_create_by(slug: cat_data[:slug]) do |category|
     category.name = cat_data[:name]

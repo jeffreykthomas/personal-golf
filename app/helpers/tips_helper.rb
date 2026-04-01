@@ -44,11 +44,23 @@ module TipsHelper
   end
 
   def tip_phase_label(tip)
+    return "Insight" if tip.type == "Insight"
+
     tip_phase_key(tip)&.humanize || "General"
   end
   
   def tip_phase_icon_for(tip)
+    return "🧠" if tip.type == "Insight"
+
     tip_phase_icon(tip_phase_key(tip))
+  end
+
+  def tip_category_label(tip)
+    tip.category&.name || tip.type.to_s.demodulize.presence || "Tip"
+  end
+
+  def tip_source_label(tip)
+    tip.source.to_s.humanize.presence || "Coach"
   end
   
   def skill_level_badge(level)

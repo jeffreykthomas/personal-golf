@@ -1,39 +1,43 @@
 class Tip < ApplicationRecord
   belongs_to :user
-  belongs_to :category
+  belongs_to :category, optional: true
   belongs_to :course, optional: true
   has_many :saved_tips, dependent: :destroy
   has_many :saved_by_users, through: :saved_tips, source: :user
   has_many :dismissed_tips, dependent: :destroy
   has_many :dismissed_by_users, through: :dismissed_tips, source: :user
 
-  TAG_OPTIONS = %w[
-    driver fairway_woods long_irons short_irons wedges putter
-    full_shots punch_shots hook_shots slice_shots pitches chips flop_shots
-    long_putts short_putts
-    from_the_tee approach_shot around_the_green on_the_green
-  ].freeze
-
   validates :title, presence: true, length: { minimum: 5, maximum: 100 }
   validates :content, length: { minimum: 10, maximum: 1000 }, allow_blank: true
   validates :youtube_url, format: { with: /\A(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]{11}(\?.*)?\z/, allow_blank: true }
-  validate :tags_are_allowed
   validates :hole_number, numericality: { only_integer: true, greater_than: 0, less_than: 19 }, allow_nil: true
-  validate :course_tip_requires_hole_number
-  validate :course_tip_requires_course
 
   enum :phase, { pre_round: 0, during_round: 1, post_round: 2 }
   enum :skill_level, { beginner: 0, intermediate: 1, advanced: 2 }
+  enum :source, { user: 0, agent: 1, coach: 2 }
 
   scope :published, -> { where(published: true) }
   scope :by_category, ->(category) { where(category: category) }
   scope :for_skill_level, ->(level) { where(skill_level: level) }
   scope :popular, -> { order(save_count: :desc) }
   scope :recent, -> { order(created_at: :desc) }
+  scope :insights, -> { where(type: "Insight") }
+  scope :golf_tips, -> { where(type: [nil, "GolfTip"]) }
+  scope :by_tag, lambda { |tag|
+    normalized = tag.to_s.strip.downcase.tr(" ", "_")
+    if normalized.present?
+      escaped = ActiveRecord::Base.sanitize_sql_like(normalized)
+      where("tags LIKE ?", "%\"#{escaped}\"%")
+    else
+      all
+    end
+  }
 
-  scope :order_by_phase, -> { order(phase: :asc) }
+  scope :order_by_phase, -> {
+    order(Arel.sql("CASE WHEN phase IS NULL THEN 1 ELSE 0 END, phase ASC"))
+  }
   scope :order_by_category_distance, -> {
-    joins(:category).order(Arel.sql(<<~SQL.squish))
+    left_joins(:category).order(Arel.sql(<<~SQL.squish))
       CASE categories.slug
         WHEN 'mental-game' THEN 0
         WHEN 'putting' THEN 1
@@ -76,7 +80,7 @@ class Tip < ApplicationRecord
   end
 
   def self.allowed_tags
-    TAG_OPTIONS
+    []
   end
 
   def human_tags
@@ -130,21 +134,6 @@ class Tip < ApplicationRecord
 
   def normalize_tags(list)
     Array(list).map { |t| t.to_s.strip.downcase.tr(' ', '_') }.uniq
-  end
-
-  def tags_are_allowed
-    invalid = tags - TAG_OPTIONS
-    errors.add(:tags, "contain invalid entries: #{invalid.join(', ')}") if invalid.any?
-  end
-
-  def course_tip_requires_hole_number
-    return unless category&.slug == 'course-tip'
-    errors.add(:hole_number, 'is required for course tips') if hole_number.blank?
-  end
-
-  def course_tip_requires_course
-    return unless category&.slug == 'course-tip'
-    errors.add(:course, 'is required for course tips') if course.nil?
   end
 
   def broadcast_new_tip

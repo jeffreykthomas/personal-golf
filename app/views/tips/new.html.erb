@@ -59,7 +59,7 @@
     <div>
       <label class="block text-caption mb-2">Tags (optional)</label>
       <div class="flex flex-wrap gap-2">
-        <% Tip.allowed_tags.each do |tag| %>
+        <% GolfTip.allowed_tags.each do |tag| %>
           <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-dark-card border border-dark-border cursor-pointer">
             <%= check_box_tag 'tip[tags][]', tag, @tip.tags.include?(tag), class: 'form-checkbox' %>
             <span class="text-caption"><%= tag.tr('_', ' ') %></span>

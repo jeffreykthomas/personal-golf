@@ -12,7 +12,6 @@ export default class extends Controller {
     "mainContent",
     "navButton",
     "messages",
-    "messagesSpacer",
     "input",
     "form",
     "status",
@@ -47,7 +46,6 @@ export default class extends Controller {
     this.latestTipId = null;
 
     this.renderStatus("");
-    this.ensureMessagesSpacer();
     this.autoGrowInput();
     this.updateVoiceButtons();
     this.openFromEvent = () => this.open();
@@ -153,8 +151,9 @@ export default class extends Controller {
   }
 
   renderHistory(messages) {
+    const spacer = this.messagesTarget.firstElementChild;
     this.messagesTarget.innerHTML = "";
-    this.ensureMessagesSpacer();
+    if (spacer) this.messagesTarget.appendChild(spacer);
     messages.forEach((message) => this.appendMessageBubble(message.role, message.content));
     this.scrollMessagesToBottom();
   }
@@ -189,8 +188,8 @@ export default class extends Controller {
 
     this.inputTarget.value = "";
     this.autoGrowInput();
-    const userBubble = this.appendMessageBubble("user", content);
-    this.scrollUserMessageToTop(userBubble);
+    this.appendMessageBubble("user", content);
+    this.scrollMessagesToBottom();
     this.renderStatus("Coach is thinking...");
 
     if (this.voiceClient && this.speakerOn) {
@@ -259,6 +258,7 @@ export default class extends Controller {
         }
         const bubble = this.ensureStreamingBubble(requestId);
         bubble.textContent += data.delta;
+        this.scrollToBottomIfNearBottom();
         break;
       case "assistant_done":
         if (!requestId) {
@@ -278,6 +278,7 @@ export default class extends Controller {
         this.streamingBubbleByRequestId.delete(requestId);
         this.handleActions(data.actions || []);
         this.renderStatus("");
+        this.scrollMessagesToBottom();
         break;
       case "error":
         if (requestId) {
@@ -493,22 +494,8 @@ export default class extends Controller {
     }
   }
 
-  ensureMessagesSpacer() {
-    if (this.hasMessagesSpacerTarget) {
-      return this.messagesSpacerTarget;
-    }
-
-    const spacer = document.createElement("div");
-    spacer.setAttribute("data-coach-panel-target", "messagesSpacer");
-    spacer.className = "shrink-0";
-    spacer.style.height = "0px";
-    this.messagesTarget.appendChild(spacer);
-    return spacer;
-  }
-
   appendToMessages(node) {
-    const spacer = this.ensureMessagesSpacer();
-    this.messagesTarget.insertBefore(node, spacer);
+    this.messagesTarget.appendChild(node);
   }
 
   ensureStreamingBubble(requestId) {
@@ -522,17 +509,13 @@ export default class extends Controller {
     return bubble;
   }
 
-  scrollUserMessageToTop(bubble) {
-    const spacer = this.ensureMessagesSpacer();
-    const currentSpacerHeight = spacer.offsetHeight;
-    const desiredTopOffset = 8;
-    const targetTop = Math.max(0, bubble.offsetTop - desiredTopOffset);
-    const contentHeightWithoutSpacer = this.messagesTarget.scrollHeight - currentSpacerHeight;
-    const maxScrollWithoutSpacer = Math.max(0, contentHeightWithoutSpacer - this.messagesTarget.clientHeight);
-    const requiredExtraSpace = Math.max(0, targetTop - maxScrollWithoutSpacer);
-
-    spacer.style.height = `${requiredExtraSpace + 16}px`;
-    this.messagesTarget.scrollTop = targetTop;
+  scrollToBottomIfNearBottom() {
+    const el = this.messagesTarget;
+    const threshold = 150;
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    if (isNearBottom) {
+      this.scrollMessagesToBottom();
+    }
   }
 
   waitForSubscriptionReady(timeoutMs = 1200) {

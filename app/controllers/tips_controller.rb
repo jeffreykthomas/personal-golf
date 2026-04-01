@@ -77,7 +77,11 @@ class TipsController < ApplicationController
 
   def saved
     @sort_by = params[:sort_by] || 'phase' # Default to timing
-    @saved_tips = current_user.saved_tip_items.includes(:category, :user)
+    @tag_filter = params[:tag].presence
+    saved_scope = current_user.saved_tip_items.includes(:category, :user)
+    @has_any_saved_tips = saved_scope.exists?
+    @available_tags = saved_scope.flat_map(&:tags).uniq.sort
+    @saved_tips = saved_scope.by_tag(@tag_filter)
     
     @saved_tips = case @sort_by
                   when 'distance'
@@ -85,7 +89,7 @@ class TipsController < ApplicationController
                   when 'newest'
                     @saved_tips.order(created_at: :desc)
                   when 'category'
-                    @saved_tips.joins(:category).order('categories.name ASC')
+                    @saved_tips.left_joins(:category).order(Arel.sql("CASE WHEN categories.name IS NULL THEN 1 ELSE 0 END, categories.name ASC"))
                   else # Default to 'phase'
                     @saved_tips.order_by_phase
                   end
@@ -103,7 +107,7 @@ class TipsController < ApplicationController
   end
   
   def new
-    @tip = Tip.new
+    @tip = GolfTip.new
     if params[:course_id].present? && params[:hole_number].present?
       @tip.category = Category.find_by(slug: 'course-tip')
       @tip.course_id = params[:course_id]
@@ -114,7 +118,7 @@ class TipsController < ApplicationController
   end
 
   def create
-    @tip = current_user.tips.new(tip_params)
+    @tip = GolfTip.new(tip_params.merge(user: current_user))
     @tip.published = true
     if @tip.save
       # If submitted from a course hole page, auto-save and redirect back there
@@ -187,7 +191,7 @@ class TipsController < ApplicationController
     excluded_tip_ids = (saved_tip_ids + viewed_tip_ids).uniq
     
     # Find next tip based on user preferences
-    tips = Tip.published
+    tips = GolfTip.published
               .where.not(id: excluded_tip_ids)
               .where("skill_level <= ?", User.skill_levels[current_user.skill_level] || 2)
               .includes(:category, :user)

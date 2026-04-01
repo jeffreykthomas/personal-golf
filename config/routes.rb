@@ -72,6 +72,12 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :internal do
+    resources :coach_sessions, only: [] do
+      resources :insights, only: [:create], controller: "coach_insights"
+    end
+  end
+
   post "coach_voice/signed_url", to: "coach_voice_sessions#signed_url"
   post "coach_voice/transcribe", to: "coach_voice_sessions#transcribe"
   post "coach_voice/synthesize", to: "coach_voice_sessions#synthesize"

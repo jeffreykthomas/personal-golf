@@ -58,12 +58,17 @@ class CoachTipActionsController < ApplicationController
     params.require(:tip).permit(
       :title,
       :content,
+      :type,
+      :entry_type,
+      :source,
+      :auto_save,
       :category_id,
       :category_slug,
       :phase,
       :skill_level,
       :course_id,
-      :hole_number
+      :hole_number,
+      tags: []
     )
   end
 
@@ -72,6 +77,9 @@ class CoachTipActionsController < ApplicationController
       id: tip.id,
       title: tip.title,
       content: tip.content,
+      type: tip.type,
+      source: tip.source,
+      tags: tip.tags,
       category_name: tip.category&.name,
       phase: tip.phase,
       saved: current_user.saved?(tip),

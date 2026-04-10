@@ -17,6 +17,21 @@ class GeminiService
     end
   end
 
+  def self.generate_self_understanding_report(prompt:)
+    generate_structured_payload(prompt: prompt, temperature: 0.4, max_output_tokens: 2_500, label: "Gemini self-understanding report generation")
+  end
+
+  def self.generate_structured_payload(prompt:, temperature: 0.4, max_output_tokens: 2_500, label: "Gemini structured generation")
+    begin
+      text = call_google_genai(prompt, temperature: temperature, max_output_tokens: max_output_tokens)
+      parse_json_payload(text)
+    rescue => e
+      Rails.logger.error "#{label} failed: #{e.class} - #{e.message}"
+      Rails.logger.error e.backtrace.first(5).join("\n")
+      nil
+    end
+  end
+
   def self.stylize_course_image(image_bytes, seed: nil, input_mime_type: 'image/png')
     # Uses Google Generative AI to restyle an uploaded hole layout image to match app aesthetics.
     # image_bytes: raw bytes from the uploaded file
@@ -170,7 +185,7 @@ class GeminiService
     PROMPT
   end
 
-  def self.call_google_genai(prompt)
+  def self.call_google_genai(prompt, temperature: 0.7, max_output_tokens: 500)
     api_key = ENV['GOOGLE_API_KEY']
     raise 'Missing GOOGLE_API_KEY' if api_key.blank?
 
@@ -188,8 +203,8 @@ class GeminiService
         }
       ],
       generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 500,
+        temperature: temperature,
+        maxOutputTokens: max_output_tokens,
         topP: 0.8,
         topK: 40
       }
@@ -214,11 +229,8 @@ class GeminiService
   def self.parse_genai_text(text)
     return nil unless text.present?
 
-    # Try to extract JSON from the model output
-    json_match = text.match(/\{.*?\}/m)
-    return nil unless json_match
-
-    parsed = JSON.parse(json_match[0])
+    parsed = parse_json_payload(text)
+    return nil unless parsed
 
     # Validate required fields
     return nil unless parsed['title'] && parsed['content']
@@ -240,6 +252,19 @@ class GeminiService
     parsed.with_indifferent_access
   rescue JSON::ParserError => e
     Rails.logger.error "Failed to parse Gemini response JSON: #{e.message}"
+    Rails.logger.error "Response text: #{text}"
+    nil
+  end
+
+  def self.parse_json_payload(text)
+    return nil unless text.present?
+
+    json_match = text.match(/\{.*\}/m)
+    return nil unless json_match
+
+    JSON.parse(json_match[0])
+  rescue JSON::ParserError => e
+    Rails.logger.error "Failed to parse Gemini JSON payload: #{e.message}"
     Rails.logger.error "Response text: #{text}"
     nil
   end

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Personal Golf" %></title>
+    <title><%= content_for(:title) || app_shell_title %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="theme-color" content="#0B1929">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Personal Golf">
+    <meta name="apple-mobile-web-app-title" content="<%= app_shell_title %>">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -31,8 +31,8 @@
     <!-- Single unified header -->
     <header class="app-header sticky top-0 z-30 bg-dark-bg/90 backdrop-blur-md border-b border-dark-border">
       <div class="px-4 h-14 flex items-center justify-between">
-        <%= link_to tips_path, class: 'flex items-center gap-2 no-underline' do %>
-          <span class="text-white font-semibold text-lg tracking-tight">Personal Golf</span>
+        <%= link_to app_home_path, class: 'flex items-center gap-2 no-underline' do %>
+          <span class="text-white font-semibold text-lg tracking-tight"><%= app_shell_title %></span>
         <% end %>
         <% if user_signed_in? %>
           <div class="flex items-center gap-3">
@@ -40,20 +40,17 @@
                 session_path,
                 method: :delete,
                 class: "text-xs text-dark-text-muted hover:text-white transition-colors" %>
-            <%= link_to saved_tips_path, class: "relative p-1.5 rounded-full hover:bg-dark-surface transition-colors" do %>
-              <svg class="w-5 h-5 text-dark-text-muted" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v13.586l-6-6-6 6V4z"/>
-              </svg>
-              <% saved_count = current_user.saved_tip_items.count %>
-              <% if saved_count > 0 %>
+            <%= link_to header_shortcut_path, class: "relative p-1.5 rounded-full hover:bg-dark-surface transition-colors", title: header_shortcut_label do %>
+              <%= nav_icon(life_mode? ? :self_report : :saved) %>
+              <% if header_shortcut_badge_count > 0 %>
                 <span class="absolute -top-0.5 -right-0.5 min-w-4 h-4 bg-accent-500 rounded-full text-[10px] text-white font-bold flex items-center justify-center px-1">
-                  <%= saved_count %>
+                  <%= header_shortcut_badge_count %>
                 </span>
               <% end %>
             <% end %>
-            <div class="w-8 h-8 bg-accent-500 rounded-full flex items-center justify-center">
+            <%= link_to settings_path, class: "w-8 h-8 bg-accent-500 rounded-full flex items-center justify-center", title: "Settings" do %>
               <span class="text-white font-medium text-sm"><%= current_user.display_name.first.upcase %></span>
-            </div>
+            <% end %>
           </div>
         <% end %>
       </div>
@@ -133,53 +130,30 @@
         <!-- Bottom navigation -->
         <nav class="fixed bottom-0 left-0 right-0 z-50 bg-dark-surface/95 backdrop-blur-md border-t border-dark-border">
           <div class="grid grid-cols-5 items-end h-[4.5rem] max-w-lg mx-auto pb-safe">
-            <%= link_to tips_path, class: "bottom-nav-item #{controller_name == 'tips' && action_name == 'index' ? 'bottom-nav-active' : ''}" do %>
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-              </svg>
-              <span class="text-[10px] mt-0.5 font-medium">Home</span>
-            <% end %>
-
-            <%= link_to saved_tips_path, class: "bottom-nav-item #{controller_name == 'tips' && action_name == 'saved' ? 'bottom-nav-active' : ''}" do %>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-              </svg>
-              <span class="text-[10px] mt-0.5 font-medium">Saved</span>
-            <% end %>
-
-            <% if coach_enabled %>
-              <button type="button"
-                      class="bottom-nav-item coach-nav-button"
-                      data-action="coach-panel#toggle"
-                      data-coach-panel-target="navButton">
-                <div class="coach-nav-orb">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                  </svg>
-                </div>
-                <span class="text-[10px] mt-1 font-medium">Coach</span>
-              </button>
-            <% else %>
-              <div class="bottom-nav-item opacity-30">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                </svg>
-                <span class="text-[10px] mt-0.5 font-medium">Coach</span>
-              </div>
-            <% end %>
-
-            <%= link_to courses_path, class: "bottom-nav-item #{controller_name == 'courses' ? 'bottom-nav-active' : ''}" do %>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 21V3l6 3 6-3 6 3v18l-6-3-6 3-6-3z"/>
-              </svg>
-              <span class="text-[10px] mt-0.5 font-medium">Courses</span>
-            <% end %>
-
-            <%= link_to categories_path, class: "bottom-nav-item #{controller_name == 'categories' ? 'bottom-nav-active' : ''}" do %>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-              </svg>
-              <span class="text-[10px] mt-0.5 font-medium">Browse</span>
+            <% bottom_nav_items(coach_enabled: coach_enabled).each do |item| %>
+              <% if item[:kind] == :coach %>
+                <% if item[:enabled] %>
+                  <button type="button"
+                          class="bottom-nav-item coach-nav-button"
+                          data-action="coach-panel#toggle"
+                          data-coach-panel-target="navButton">
+                    <div class="coach-nav-orb">
+                      <%= nav_icon(item[:icon], classes: "w-6 h-6") %>
+                    </div>
+                    <span class="text-[10px] mt-1 font-medium"><%= item[:label] %></span>
+                  </button>
+                <% else %>
+                  <div class="bottom-nav-item opacity-30">
+                    <%= nav_icon(item[:icon]) %>
+                    <span class="text-[10px] mt-0.5 font-medium"><%= item[:label] %></span>
+                  </div>
+                <% end %>
+              <% else %>
+                <%= link_to item[:path], class: "bottom-nav-item #{item[:active] ? 'bottom-nav-active' : ''}" do %>
+                  <%= nav_icon(item[:icon]) %>
+                  <span class="text-[10px] mt-0.5 font-medium"><%= item[:label] %></span>
+                <% end %>
+              <% end %>
             <% end %>
           </div>
         </nav>

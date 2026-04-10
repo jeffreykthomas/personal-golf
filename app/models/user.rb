@@ -8,12 +8,17 @@ class User < ApplicationRecord
   has_many :dismissed_tip_items, through: :dismissed_tips, source: :tip
   has_many :coach_sessions, dependent: :destroy
   has_one :coach_profile, dependent: :destroy
+  has_many :self_understanding_reports, dependent: :destroy
+  has_many :learning_nodes, dependent: :destroy
+  has_many :learning_sources, through: :learning_nodes
+  has_many :learning_questions, through: :learning_nodes
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
   
   # Custom validation for password (required only for email/password auth)
   validates :password, presence: true, length: { minimum: 6 }, unless: :oauth_user?
 
+  enum :app_mode, { golf: 0, life: 1 }, default: :golf
   enum :skill_level, { beginner: 0, intermediate: 1, advanced: 2 }
 
   serialize :goals, coder: JSON, type: Array
@@ -22,6 +27,14 @@ class User < ApplicationRecord
 
   def display_name
     name.presence || email_address.split('@').first
+  end
+
+  def latest_self_understanding_report
+    self_understanding_reports.order(generated_at: :desc, created_at: :desc).first
+  end
+
+  def learning_workspace_stream_name
+    "learning_workspace_#{id}"
   end
 
   def save_tip(tip)
@@ -59,6 +72,7 @@ class User < ApplicationRecord
 
   def profile_for_ai
     {
+      app_mode: app_mode,
       handicap: handicap,
       skill_level: skill_level,
       goals: goals || [],

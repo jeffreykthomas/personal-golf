@@ -2,8 +2,8 @@ require "test_helper"
 
 class TipTest < ActiveSupport::TestCase
   def setup
-    @user = users(:one)
-    @category = categories(:one)
+    @user = create_user
+    @category = create_category(name: "Putting")
   end
 
   test "should create tip with valid youtube url" do

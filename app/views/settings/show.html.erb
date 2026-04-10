@@ -1,0 +1,48 @@
+<div class="max-w-2xl mx-auto px-4 py-6 md:px-6">
+  <div class="mb-6">
+    <p class="text-xs uppercase tracking-[0.2em] text-accent-400 mb-2">Settings</p>
+    <h1 class="text-3xl font-semibold text-white">Mode</h1>
+    <p class="text-dark-text-muted mt-2 max-w-xl">
+      Choose whether the app feels golf-first or life-first. Life Mode now includes a self-understanding report and an Obsidian-like Learning workspace for agent-assisted research.
+    </p>
+  </div>
+
+  <%= form_with model: current_user, url: settings_path, method: :patch, class: "space-y-4" do |form| %>
+    <div class="grid gap-4 md:grid-cols-2">
+      <% User.app_modes.keys.each do |mode| %>
+        <% checked = current_user.app_mode == mode %>
+        <label class="block rounded-2xl border <%= checked ? 'border-accent-500 bg-accent-500/10' : 'border-dark-border bg-dark-surface/70' %> p-5 cursor-pointer transition-colors hover:border-accent-400">
+          <div class="flex items-start gap-3">
+            <%= form.radio_button :app_mode, mode, class: "mt-1 text-accent-500 focus:ring-accent-500" %>
+            <div>
+              <div class="text-white font-semibold"><%= mode.titleize %> Mode</div>
+              <p class="text-sm text-dark-text-muted mt-1">
+                <%= mode == "golf" ? "Keep the current golf coaching, courses, and saved-tip experience." : "Switch the shell toward life support with the self-understanding report and the new Learning tab." %>
+              </p>
+            </div>
+          </div>
+        </label>
+      <% end %>
+    </div>
+
+    <% if current_user.errors.any? %>
+      <div class="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <%= current_user.errors.full_messages.to_sentence %>
+      </div>
+    <% end %>
+
+    <div class="rounded-2xl border border-dark-border bg-dark-surface/70 p-5">
+      <h2 class="text-white font-semibold mb-2">What changes in Life Mode</h2>
+      <ul class="space-y-2 text-sm text-dark-text-muted">
+        <li>The second tab becomes a self-understanding report instead of saved golf tips.</li>
+        <li>The fourth tab becomes Learning instead of Courses, with a note-first workspace for agent-assisted research.</li>
+        <li>The report updates nightly only when there is meaningful new information.</li>
+        <li>The Learning workspace can collect sources, summarize them, answer topic questions, and reorganize crowded branches over time.</li>
+      </ul>
+    </div>
+
+    <div class="flex justify-end">
+      <%= form.submit "Save mode", class: "btn-primary !rounded-xl !px-5 !py-3 text-sm" %>
+    </div>
+  <% end %>
+</div>

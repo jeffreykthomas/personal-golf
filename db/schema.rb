@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_26_170000) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_06_101000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -163,6 +163,72 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_26_170000) do
     t.index ["course_id"], name: "index_holes_on_course_id"
   end
 
+  create_table "learning_node_links", force: :cascade do |t|
+    t.integer "from_node_id", null: false
+    t.integer "to_node_id", null: false
+    t.integer "relation_kind", default: 0, null: false
+    t.json "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["from_node_id", "to_node_id", "relation_kind"], name: "index_learning_node_links_unique", unique: true
+    t.index ["from_node_id"], name: "index_learning_node_links_on_from_node_id"
+    t.index ["to_node_id"], name: "index_learning_node_links_on_to_node_id"
+  end
+
+  create_table "learning_nodes", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "parent_id"
+    t.string "title", null: false
+    t.string "slug", null: false
+    t.text "summary"
+    t.text "body_markdown"
+    t.integer "node_kind", default: 0, null: false
+    t.integer "status", default: 0, null: false
+    t.integer "position", default: 0, null: false
+    t.json "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["parent_id"], name: "index_learning_nodes_on_parent_id"
+    t.index ["user_id", "parent_id", "position"], name: "index_learning_nodes_on_user_id_and_parent_id_and_position"
+    t.index ["user_id", "slug"], name: "index_learning_nodes_on_user_id_and_slug", unique: true
+    t.index ["user_id"], name: "index_learning_nodes_on_user_id"
+  end
+
+  create_table "learning_questions", force: :cascade do |t|
+    t.integer "learning_node_id", null: false
+    t.text "question_text", null: false
+    t.text "answer_markdown"
+    t.integer "status", default: 0, null: false
+    t.datetime "answered_at"
+    t.json "citations_data", default: [], null: false
+    t.json "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["learning_node_id", "created_at"], name: "index_learning_questions_on_learning_node_id_and_created_at"
+    t.index ["learning_node_id"], name: "index_learning_questions_on_learning_node_id"
+  end
+
+  create_table "learning_sources", force: :cascade do |t|
+    t.integer "learning_node_id", null: false
+    t.integer "source_type", default: 0, null: false
+    t.integer "extraction_status", default: 0, null: false
+    t.string "title", null: false
+    t.string "url"
+    t.integer "quality_score", default: 50, null: false
+    t.string "publication_name"
+    t.string "author_name"
+    t.date "published_on"
+    t.text "summary_markdown"
+    t.text "extracted_content"
+    t.string "content_hash"
+    t.json "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["learning_node_id", "source_type"], name: "index_learning_sources_on_learning_node_id_and_source_type"
+    t.index ["learning_node_id", "url"], name: "index_learning_sources_on_learning_node_id_and_url"
+    t.index ["learning_node_id"], name: "index_learning_sources_on_learning_node_id"
+  end
+
   create_table "saved_tips", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "tip_id", null: false
@@ -170,6 +236,23 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_26_170000) do
     t.datetime "updated_at", null: false
     t.index ["tip_id"], name: "index_saved_tips_on_tip_id"
     t.index ["user_id"], name: "index_saved_tips_on_user_id"
+  end
+
+  create_table "self_understanding_reports", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "framework_name", default: "Nine Currents", null: false
+    t.string "title", default: "Self-Understanding Report", null: false
+    t.text "body_markdown", null: false
+    t.json "currents_data", default: {}, null: false
+    t.json "source_snapshot", default: {}, null: false
+    t.string "source_digest", null: false
+    t.datetime "source_updated_at"
+    t.datetime "generated_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "generated_at"], name: "index_self_understanding_reports_on_user_id_and_generated_at"
+    t.index ["user_id", "source_digest"], name: "index_self_understanding_reports_on_user_id_and_source_digest"
+    t.index ["user_id"], name: "index_self_understanding_reports_on_user_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -342,6 +425,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_26_170000) do
     t.string "uid"
     t.string "google_token"
     t.string "google_refresh_token"
+    t.integer "app_mode", default: 0, null: false
+    t.index ["app_mode"], name: "index_users_on_app_mode"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
     t.index ["provider", "uid"], name: "index_users_on_provider_and_uid", unique: true
     t.index ["skill_level"], name: "index_users_on_skill_level"
@@ -359,8 +444,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_26_170000) do
   add_foreign_key "hole_images", "users"
   add_foreign_key "hole_tees", "holes"
   add_foreign_key "holes", "courses"
+  add_foreign_key "learning_node_links", "learning_nodes", column: "from_node_id"
+  add_foreign_key "learning_node_links", "learning_nodes", column: "to_node_id"
+  add_foreign_key "learning_nodes", "learning_nodes", column: "parent_id"
+  add_foreign_key "learning_nodes", "users"
+  add_foreign_key "learning_questions", "learning_nodes"
+  add_foreign_key "learning_sources", "learning_nodes"
   add_foreign_key "saved_tips", "tips"
   add_foreign_key "saved_tips", "users"
+  add_foreign_key "self_understanding_reports", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

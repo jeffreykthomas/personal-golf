@@ -25,6 +25,24 @@ Rails.application.routes.draw do
   end
 
   # Main app routes
+  resource :settings, only: [:show, :update]
+  resource :self_understanding_report, only: [:show]
+  get "learning", to: "learning#show", as: :learning
+
+  resources :learning_nodes, only: [:create, :update] do
+    member do
+      post :discover_sources
+      post :compile
+      post :rebalance
+    end
+
+    resources :learning_sources, only: [:create] do
+      post :summarize, on: :member
+    end
+
+    resources :learning_questions, only: [:create]
+  end
+
   resources :tips do
     member do
       post :save

@@ -5,7 +5,8 @@ class ApplicationController < ActionController::Base
   # Commented out for development - uncomment for production
   # allow_browser versions: :modern
 
-  helper_method :current_user, :user_signed_in?, :coach_feature_enabled?, :coach_context_payload, :coach_phase_for_page, :coach_auto_open?
+  helper_method :current_user, :user_signed_in?, :coach_feature_enabled?, :coach_context_payload,
+                :coach_phase_for_page, :coach_auto_open?, :current_app_mode, :golf_mode?, :life_mode?
 
   private
 
@@ -15,6 +16,20 @@ class ApplicationController < ActionController::Base
 
   def user_signed_in?
     current_user.present?
+  end
+
+  def current_app_mode
+    return "golf" unless user_signed_in?
+
+    current_user.app_mode || "golf"
+  end
+
+  def golf_mode?
+    current_app_mode == "golf"
+  end
+
+  def life_mode?
+    current_app_mode == "life"
   end
 
   def coach_context_payload
@@ -53,6 +68,12 @@ class ApplicationController < ActionController::Base
 
   def coach_auto_open?
     coach_phase_for_page == "onboarding"
+  end
+
+  def require_life_mode!
+    return if life_mode?
+
+    redirect_to tips_path
   end
 
   # Alias for compatibility

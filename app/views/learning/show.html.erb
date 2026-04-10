@@ -1,0 +1,320 @@
+<%= turbo_stream_from current_user.learning_workspace_stream_name %>
+
+<div class="max-w-7xl mx-auto px-4 py-6 md:px-6">
+  <div class="mb-6">
+    <p class="text-xs uppercase tracking-[0.2em] text-accent-400 mb-2">Life Mode</p>
+    <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+      <div>
+        <h1 class="text-3xl font-semibold text-white">Learning</h1>
+        <p class="text-dark-text-muted mt-2 max-w-3xl">
+          An Obsidian-like learning workspace for topics you want to explore with the agent. Add a topic, let the agent gather sources and organize the note, then keep asking questions until the map gets sharper.
+        </p>
+      </div>
+      <div class="rounded-2xl border border-dark-border bg-dark-surface/60 px-4 py-3 text-sm text-dark-text-muted">
+        The agent keeps current understanding at the top and evidence/history below, so each note compounds over time.
+      </div>
+    </div>
+  </div>
+
+  <div class="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+    <aside class="space-y-5">
+      <section class="rounded-3xl border border-dark-border bg-dark-surface/70 p-4">
+        <div class="flex items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-lg font-semibold text-white">Vault</h2>
+            <p class="text-xs text-dark-text-muted mt-1">Root topics and nested branches.</p>
+          </div>
+          <span class="rounded-full bg-dark-bg/80 px-2.5 py-1 text-[10px] font-medium text-dark-text-muted"><%= current_user.learning_nodes.count %> notes</span>
+        </div>
+
+        <%= form_with model: @new_root_node, url: learning_nodes_path, class: "space-y-3 mb-4" do |form| %>
+          <div>
+            <%= form.label :title, "New topic", class: "block text-xs font-medium uppercase tracking-[0.16em] text-dark-text-muted mb-2" %>
+            <%= form.text_field :title, placeholder: "Ancient Rome", class: "w-full rounded-xl border border-dark-border bg-dark-bg/80 px-3 py-2.5 text-sm text-white placeholder-dark-text-muted focus:outline-none focus:border-accent-500" %>
+          </div>
+          <%= form.submit "Add Topic", class: "btn-primary w-full !rounded-xl !py-2.5 text-sm" %>
+        <% end %>
+
+        <% if @root_nodes.any? %>
+          <ul class="space-y-3">
+            <% @root_nodes.each do |node| %>
+              <%= render "learning/tree_item", node: node, selected_node_id: @selected_node&.id %>
+            <% end %>
+          </ul>
+        <% else %>
+          <div class="rounded-2xl border border-dashed border-dark-border bg-dark-bg/60 px-4 py-6 text-sm leading-6 text-dark-text-muted">
+            No topics yet. Add one and the agent will start collecting sources and shaping the note.
+          </div>
+        <% end %>
+      </section>
+    </aside>
+
+    <section class="space-y-5">
+      <% if @selected_node.present? %>
+        <section class="rounded-3xl border border-dark-border bg-dark-surface/80 p-5">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-3">
+                <% @selected_node.breadcrumbs.each do |node| %>
+                  <%= link_to node.title, learning_path(node_id: node.id), class: "rounded-full border border-dark-border bg-dark-bg/70 px-3 py-1 text-xs font-medium text-dark-text-muted hover:text-white transition-colors" %>
+                <% end %>
+              </div>
+              <h2 class="text-2xl font-semibold text-white"><%= @selected_node.title %></h2>
+              <p class="text-dark-text-muted mt-2 max-w-3xl">
+                <%= @selected_node.summary.presence || "This note is still forming. Add sources, ask questions, or let the agent compile the current understanding." %>
+              </p>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <span class="rounded-full border px-3 py-1 text-xs font-medium <%= learning_status_badge_classes(@selected_node.status) %>">
+                <%= @selected_node.status.humanize %>
+              </span>
+              <%= button_to "Discover Sources", discover_sources_learning_node_path(@selected_node), method: :post, class: "rounded-full border border-dark-border bg-dark-bg/70 px-3 py-1.5 text-xs font-medium text-white hover:border-accent-400 transition-colors" %>
+              <%= button_to "Compile Note", compile_learning_node_path(@selected_node), method: :post, class: "rounded-full border border-dark-border bg-dark-bg/70 px-3 py-1.5 text-xs font-medium text-white hover:border-accent-400 transition-colors" %>
+              <%= button_to "Rebalance", rebalance_learning_node_path(@selected_node), method: :post, class: "rounded-full border border-dark-border bg-dark-bg/70 px-3 py-1.5 text-xs font-medium text-white hover:border-accent-400 transition-colors" %>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-3xl border border-dark-border bg-dark-surface/80 p-5">
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 class="text-lg font-semibold text-white">Local Graph</h3>
+              <p class="text-xs text-dark-text-muted mt-1">Navigate the current note by hierarchy and connection.</p>
+            </div>
+            <span class="text-xs text-dark-text-muted"><%= @selected_node.local_graph_nodes.count + 1 %> visible nodes</span>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-2xl border border-dark-border bg-dark-bg/60 p-4">
+              <p class="text-xs uppercase tracking-[0.16em] text-dark-text-muted mb-2">Parent</p>
+              <% if @selected_node.parent.present? %>
+                <%= link_to @selected_node.parent.title, learning_path(node_id: @selected_node.parent.id), class: "text-sm font-medium text-white hover:text-accent-300" %>
+              <% else %>
+                <p class="text-sm text-dark-text-muted">This is a root topic.</p>
+              <% end %>
+            </div>
+
+            <div class="rounded-2xl border border-dark-border bg-dark-bg/60 p-4">
+              <p class="text-xs uppercase tracking-[0.16em] text-dark-text-muted mb-2">Children</p>
+              <% if @selected_node.ordered_children.any? %>
+                <div class="flex flex-wrap gap-2">
+                  <% @selected_node.ordered_children.each do |child| %>
+                    <%= link_to child.title, learning_path(node_id: child.id), class: "rounded-full border border-dark-border px-3 py-1 text-xs font-medium text-white hover:border-accent-400" %>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-sm text-dark-text-muted">No child notes yet.</p>
+              <% end %>
+            </div>
+
+            <div class="rounded-2xl border border-dark-border bg-dark-bg/60 p-4">
+              <p class="text-xs uppercase tracking-[0.16em] text-dark-text-muted mb-2">Related</p>
+              <% if @selected_node.explicit_related_nodes.any? %>
+                <div class="flex flex-wrap gap-2">
+                  <% @selected_node.explicit_related_nodes.each do |related_node| %>
+                    <%= link_to related_node.title, learning_path(node_id: related_node.id), class: "rounded-full border border-dark-border px-3 py-1 text-xs font-medium text-white hover:border-accent-400" %>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-sm text-dark-text-muted">No explicit related notes yet.</p>
+              <% end %>
+            </div>
+
+            <div class="rounded-2xl border border-dark-border bg-dark-bg/60 p-4">
+              <p class="text-xs uppercase tracking-[0.16em] text-dark-text-muted mb-2">Backlinks</p>
+              <% if @selected_node.backlinked_nodes.any? %>
+                <div class="flex flex-wrap gap-2">
+                  <% @selected_node.backlinked_nodes.each do |backlinked_node| %>
+                    <%= link_to backlinked_node.title, learning_path(node_id: backlinked_node.id), class: "rounded-full border border-dark-border px-3 py-1 text-xs font-medium text-white hover:border-accent-400" %>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-sm text-dark-text-muted">No backlinks yet.</p>
+              <% end %>
+            </div>
+          </div>
+        </section>
+
+        <section class="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+          <div class="space-y-5">
+            <section class="rounded-3xl border border-dark-border bg-dark-surface/80 p-5">
+              <div class="flex items-center justify-between gap-3 mb-4">
+                <div>
+                  <h3 class="text-lg font-semibold text-white">Organizing Note</h3>
+                  <p class="text-xs text-dark-text-muted mt-1">Markdown-native note with current understanding and evidence trail.</p>
+                </div>
+                <% if @selected_node.metadata["compiled_at"].present? %>
+                  <span class="text-xs text-dark-text-muted">Compiled <%= Time.zone.parse(@selected_node.metadata["compiled_at"]).strftime("%b %-d, %-I:%M %p") rescue @selected_node.metadata["compiled_at"] %></span>
+                <% end %>
+              </div>
+
+              <%= form_with model: @selected_node, url: learning_node_path(@selected_node), method: :patch, class: "space-y-4" do |form| %>
+                <div>
+                  <%= form.label :title, "Title", class: "block text-xs font-medium uppercase tracking-[0.16em] text-dark-text-muted mb-2" %>
+                  <%= form.text_field :title, class: "w-full rounded-xl border border-dark-border bg-dark-bg/80 px-3 py-2.5 text-sm text-white placeholder-dark-text-muted focus:outline-none focus:border-accent-500" %>
+                </div>
+
+                <div>
+                  <%= form.label :summary, "Summary", class: "block text-xs font-medium uppercase tracking-[0.16em] text-dark-text-muted mb-2" %>
+                  <%= form.text_area :summary, rows: 3, class: "w-full rounded-2xl border border-dark-border bg-dark-bg/80 px-4 py-3 text-sm text-white placeholder-dark-text-muted focus:outline-none focus:border-accent-500 resize-y" %>
+                </div>
+
+                <div>
+                  <%= form.label :body_markdown, "Body Markdown", class: "block text-xs font-medium uppercase tracking-[0.16em] text-dark-text-muted mb-2" %>
+                  <%= form.text_area :body_markdown, rows: 18, placeholder: "## Current Understanding\n\nWhat do we know so far?\n\n## Evidence Timeline\n\n- ...", class: "w-full rounded-3xl border border-dark-border bg-dark-bg/80 px-4 py-4 font-mono text-sm leading-6 text-white placeholder-dark-text-muted focus:outline-none focus:border-accent-500 resize-y" %>
+                </div>
+
+                <div class="flex justify-end">
+                  <%= form.submit "Save Note", class: "btn-primary !rounded-xl !px-5 !py-3 text-sm" %>
+                </div>
+              <% end %>
+            </section>
+
+            <section class="rounded-3xl border border-dark-border bg-dark-surface/80 p-5">
+              <div class="flex items-center justify-between gap-3 mb-4">
+                <div>
+                  <h3 class="text-lg font-semibold text-white">Sources</h3>
+                  <p class="text-xs text-dark-text-muted mt-1">Agent-found sources, user URLs, and uploaded documents.</p>
+                </div>
+                <span class="text-xs text-dark-text-muted"><%= @selected_node.learning_sources.count %> sources</span>
+              </div>
+
+              <div class="grid gap-4 lg:grid-cols-2 mb-5">
+                <%= form_with model: [@selected_node, LearningSource.new], url: learning_node_learning_sources_path(@selected_node), class: "rounded-2xl border border-dark-border bg-dark-bg/60 p-4 space-y-3" do |form| %>
+                  <div class="text-sm font-medium text-white">Add URL</div>
+                  <%= form.text_field :title, placeholder: "Optional title", class: "w-full rounded-xl border border-dark-border bg-dark-surface/70 px-3 py-2 text-sm text-white placeholder-dark-text-muted focus:outline-none focus:border-accent-500" %>
+                  <%= form.url_field :url, placeholder: "https://example.com/source", class: "w-full rounded-xl border border-dark-border bg-dark-surface/70 px-3 py-2 text-sm text-white placeholder-dark-text-muted focus:outline-none focus:border-accent-500" %>
+                  <%= form.submit "Add URL Source", class: "w-full rounded-xl border border-dark-border bg-dark-surface px-4 py-2.5 text-sm font-medium text-white hover:border-accent-400 transition-colors" %>
+                <% end %>
+
+                <%= form_with model: [@selected_node, LearningSource.new], url: learning_node_learning_sources_path(@selected_node), class: "rounded-2xl border border-dark-border bg-dark-bg/60 p-4 space-y-3" do |form| %>
+                  <div class="text-sm font-medium text-white">Upload File</div>
+                  <%= form.text_field :title, placeholder: "Optional title", class: "w-full rounded-xl border border-dark-border bg-dark-surface/70 px-3 py-2 text-sm text-white placeholder-dark-text-muted focus:outline-none focus:border-accent-500" %>
+                  <%= form.file_field :uploaded_file, class: "block w-full rounded-xl border border-dark-border bg-dark-surface/70 px-3 py-2 text-sm text-dark-text-muted file:mr-4 file:rounded-lg file:border-0 file:bg-accent-500 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white" %>
+                  <%= form.submit "Upload Source", class: "w-full rounded-xl border border-dark-border bg-dark-surface px-4 py-2.5 text-sm font-medium text-white hover:border-accent-400 transition-colors" %>
+                <% end %>
+              </div>
+
+              <div class="space-y-4">
+                <% if @selected_node.learning_sources.any? %>
+                  <% @selected_node.learning_sources.order(quality_score: :desc, created_at: :asc).each do |source| %>
+                    <article class="rounded-2xl border border-dark-border bg-dark-bg/60 p-4">
+                      <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                          <div class="flex flex-wrap items-center gap-2 mb-2">
+                            <h4 class="text-white font-semibold"><%= source.display_title %></h4>
+                            <span class="rounded-full border px-2.5 py-1 text-[10px] font-medium <%= learning_source_status_badge_classes(source.extraction_status) %>"><%= source.extraction_status.humanize %></span>
+                            <span class="rounded-full border border-dark-border bg-dark-surface px-2.5 py-1 text-[10px] font-medium text-dark-text-muted"><%= source.source_type.humanize %></span>
+                            <span class="rounded-full border border-dark-border bg-dark-surface px-2.5 py-1 text-[10px] font-medium text-dark-text-muted">Quality <%= source.quality_score %></span>
+                          </div>
+
+                          <% if source.url.present? %>
+                            <p class="text-xs text-accent-300 break-all"><%= source.url %></p>
+                          <% elsif source.uploaded_file.attached? %>
+                            <p class="text-xs text-dark-text-muted">Uploaded file: <%= source.uploaded_file.filename %></p>
+                          <% end %>
+
+                          <% if source.citation_label.present? %>
+                            <p class="text-xs text-dark-text-muted mt-2"><%= source.citation_label %></p>
+                          <% end %>
+                        </div>
+
+                        <%= button_to "Summarize Again", summarize_learning_node_learning_source_path(@selected_node, source), method: :post, class: "rounded-full border border-dark-border bg-dark-surface px-3 py-1.5 text-xs font-medium text-white hover:border-accent-400 transition-colors" %>
+                      </div>
+
+                      <div class="mt-4 text-sm leading-7 text-dark-text-muted">
+                        <%= simple_format(source.summary_markdown.to_s.presence || "Summary pending.") %>
+                      </div>
+                    </article>
+                  <% end %>
+                <% else %>
+                  <div class="rounded-2xl border border-dashed border-dark-border bg-dark-bg/60 px-4 py-6 text-sm leading-6 text-dark-text-muted">
+                    No sources yet. Add a URL or upload a document, or let the agent discover sources for this topic.
+                  </div>
+                <% end %>
+              </div>
+            </section>
+          </div>
+
+          <div class="space-y-5">
+            <section class="rounded-3xl border border-dark-border bg-dark-surface/80 p-5">
+              <div class="flex items-center justify-between gap-3 mb-4">
+                <div>
+                  <h3 class="text-lg font-semibold text-white">Child Notes</h3>
+                  <p class="text-xs text-dark-text-muted mt-1">Add nested notes under the current branch.</p>
+                </div>
+                <span class="text-xs text-dark-text-muted"><%= @selected_node.ordered_children.count %> children</span>
+              </div>
+
+              <%= form_with model: @new_child_node, url: learning_nodes_path, class: "space-y-3" do |form| %>
+                <%= form.hidden_field :parent_id, value: @selected_node.id %>
+                <%= form.text_field :title, placeholder: "New child topic", class: "w-full rounded-xl border border-dark-border bg-dark-bg/80 px-3 py-2.5 text-sm text-white placeholder-dark-text-muted focus:outline-none focus:border-accent-500" %>
+                <%= form.text_area :summary, rows: 3, placeholder: "Optional note about why this child deserves its own page", class: "w-full rounded-2xl border border-dark-border bg-dark-bg/80 px-4 py-3 text-sm text-white placeholder-dark-text-muted focus:outline-none focus:border-accent-500 resize-y" %>
+                <%= form.submit "Add Child Note", class: "btn-primary w-full !rounded-xl !py-2.5 text-sm" %>
+              <% end %>
+            </section>
+
+            <section id="learning-questions" class="rounded-3xl border border-dark-border bg-dark-surface/80 p-5">
+              <div class="flex items-center justify-between gap-3 mb-4">
+                <div>
+                  <h3 class="text-lg font-semibold text-white">Topic Q&A</h3>
+                  <p class="text-xs text-dark-text-muted mt-1">Ask questions against this note and its collected sources.</p>
+                </div>
+                <span class="text-xs text-dark-text-muted"><%= @selected_node.learning_questions.count %> questions</span>
+              </div>
+
+              <%= form_with model: [@selected_node, @new_question], url: learning_node_learning_questions_path(@selected_node), class: "space-y-3 mb-5" do |form| %>
+                <%= form.text_area :question_text, rows: 4, placeholder: "What were the main political institutions of Ancient Rome, and which sources are strongest on this?", class: "w-full rounded-2xl border border-dark-border bg-dark-bg/80 px-4 py-3 text-sm text-white placeholder-dark-text-muted focus:outline-none focus:border-accent-500 resize-y" %>
+                <%= form.submit "Ask Topic Question", class: "btn-primary w-full !rounded-xl !py-2.5 text-sm" %>
+              <% end %>
+
+              <div class="space-y-4">
+                <% if @selected_node.learning_questions.any? %>
+                  <% @selected_node.learning_questions.order(created_at: :desc).each do |question| %>
+                    <article class="rounded-2xl border border-dark-border bg-dark-bg/60 p-4">
+                      <p class="text-sm font-medium text-white"><%= question.question_text %></p>
+                      <div class="mt-3 text-sm leading-7 text-dark-text-muted">
+                        <%= simple_format(question.answer_markdown.to_s.presence || "Answer pending.") %>
+                      </div>
+
+                      <% if question.citations_data.any? %>
+                        <div class="mt-4">
+                          <p class="text-xs uppercase tracking-[0.16em] text-dark-text-muted mb-2">Citations</p>
+                          <div class="space-y-2">
+                            <% question.citations_data.each do |citation| %>
+                              <div class="rounded-xl border border-dark-border bg-dark-surface/70 px-3 py-2">
+                                <div class="text-xs font-medium text-white"><%= citation["title"] %></div>
+                                <div class="text-xs text-dark-text-muted mt-1"><%= citation["reason"] %></div>
+                              </div>
+                            <% end %>
+                          </div>
+                        </div>
+                      <% end %>
+                    </article>
+                  <% end %>
+                <% else %>
+                  <div class="rounded-2xl border border-dashed border-dark-border bg-dark-bg/60 px-4 py-6 text-sm leading-6 text-dark-text-muted">
+                    No topic questions yet. Ask one once the note has some source material behind it.
+                  </div>
+                <% end %>
+              </div>
+            </section>
+          </div>
+        </section>
+      <% else %>
+        <section class="rounded-3xl border border-dashed border-dark-border bg-dark-surface/50 p-8 text-center">
+          <div class="max-w-xl mx-auto">
+            <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-accent-500/10 text-accent-300 mb-5">
+              <%= nav_icon(:learning, classes: "w-8 h-8") %>
+            </div>
+            <h2 class="text-2xl font-semibold text-white mb-3">Start a learning vault</h2>
+            <p class="text-dark-text-muted leading-7">
+              Add your first topic in the left column and the agent will begin gathering sources, shaping an organizing note, and building a reusable research trail.
+            </p>
+          </div>
+        </section>
+      <% end %>
+    </section>
+  </div>
+</div>

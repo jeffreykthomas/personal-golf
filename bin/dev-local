@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+
+if ! gem list foreman -i --silent; then
+  echo "Installing foreman..."
+  gem install foreman
+fi
+
+# Default to port 3000 if not specified.
+export PORT="${PORT:-3000}"
+
+# Let the debug gem allow remote connections,
+# but avoid loading until `debugger` is called.
+export RUBY_DEBUG_OPEN="true"
+export RUBY_DEBUG_LAZY="true"
+
+# Point Rails at an already-running local NanoClaw instance.
+export ENABLE_COACH_AGENT="${ENABLE_COACH_AGENT:-true}"
+export CLAW_SIBLING_URL="${CLAW_SIBLING_URL:-http://127.0.0.1:4317}"
+export CLAW_SIBLING_TOKEN="${CLAW_SIBLING_TOKEN:-dev-claw-token}"
+
+exec foreman start -f Procfile.dev -m web=1,css=1,claw=0 "$@"

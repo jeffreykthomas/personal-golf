@@ -5,12 +5,7 @@ class LearningQuestionAnsweringService
   end
 
   def call
-    payload = NanoclawLearningBridgeService.answer_question(question: @question) || GeminiService.generate_structured_payload(
-      prompt: build_prompt,
-      temperature: 0.35,
-      max_output_tokens: 1_800,
-      label: "Gemini learning question answering"
-    )
+    payload = NanoclawLearningBridgeService.answer_question(question: @question)
 
     citations = normalize_citations(payload&.dig("citations"))
 
@@ -19,7 +14,7 @@ class LearningQuestionAnsweringService
       citations_data: citations,
       status: :answered,
       answered_at: Time.current,
-      metadata: (@question.metadata || {}).merge("answered_by" => "agent")
+      metadata: (@question.metadata || {}).except("last_error").merge("answered_by" => "nanoclaw")
     )
 
     @question

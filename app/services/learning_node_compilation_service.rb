@@ -5,30 +5,30 @@ class LearningNodeCompilationService
     @node = node
   end
 
-  def call
-    payload = NanoclawLearningBridgeService.compile_node(node: @node) || GeminiService.generate_structured_payload(
-      prompt: build_prompt,
-      temperature: 0.35,
-      max_output_tokens: 3_000,
-      label: "Gemini learning node compilation"
-    )
+  def call(payload: nil)
+    payload ||= NanoclawLearningBridgeService.compile_node(node: @node)
+    apply_payload(payload)
+  end
 
+  def apply_payload(payload)
     child_topics = normalize_child_topics(payload&.dig("child_topics"))
     related_titles = normalize_related_titles(payload&.dig("related_topics"))
     open_questions = Array(payload&.dig("open_questions")).filter_map { |entry| entry.to_s.strip.presence }.first(6)
+    suggestions = build_suggestions(child_topics)
 
     @node.update!(
       summary: payload&.dig("summary").to_s.strip.presence || fallback_summary,
       body_markdown: payload&.dig("body_markdown").to_s.strip.presence || fallback_body_markdown(child_topics:, open_questions:),
       status: :ready,
-      metadata: @node.metadata.merge(
+      metadata: @node.metadata.except("last_research_error", "last_research_failed_at").merge(
         "compiled_at" => Time.current.iso8601,
         "compiled_source_digest" => @node.compiled_source_digest,
-        "open_questions" => open_questions
+        "open_questions" => open_questions,
+        "suggested_child_topics" => suggestions,
+        "compiled_by" => "nanoclaw"
       )
     )
 
-    sync_child_topics(child_topics)
     sync_related_topics(related_titles)
 
     @node
@@ -140,18 +140,18 @@ class LearningNodeCompilationService
     Array(raw_titles).filter_map { |entry| entry.to_s.strip.presence }.uniq.first(8)
   end
 
-  def sync_child_topics(child_topics)
-    child_topics.each_with_index do |topic, index|
-      child = @node.children.where("LOWER(title) = ?", topic[:title].downcase).first_or_initialize
-      was_new_record = child.new_record?
-      child.user = @node.user
-      child.parent = @node
-      child.title = topic[:title]
-      child.position = index
-      child.summary = topic[:summary] if topic[:summary].present?
-      child.node_kind ||= :topic
-      child.status = :pending_research if was_new_record
-      child.save!
+  def build_suggestions(child_topics)
+    dismissed = Array(@node.metadata["dismissed_suggestion_titles"]).map { |title| title.to_s.downcase }
+    existing_child_titles = @node.children.pluck(:title).map(&:downcase)
+    excluded = (dismissed + existing_child_titles).to_set
+
+    child_topics.filter_map do |topic|
+      next if excluded.include?(topic[:title].downcase)
+
+      {
+        "title" => topic[:title],
+        "summary" => topic[:summary].to_s
+      }
     end
   end
 

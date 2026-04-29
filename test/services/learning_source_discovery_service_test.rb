@@ -19,7 +19,7 @@ class LearningSourceDiscoveryServiceTest < ActiveSupport::TestCase
       ]
     }
 
-    GeminiService.stub(:generate_structured_payload, payload) do
+    NanoclawLearningBridgeService.stub(:discover_sources, payload) do
       assert_difference -> { node.learning_sources.count }, +1 do
         LearningSourceDiscoveryService.new(node: node).call
       end
@@ -29,5 +29,35 @@ class LearningSourceDiscoveryServiceTest < ActiveSupport::TestCase
     assert source.agent_found?
     assert_equal 88, source.quality_score
     assert_equal "History Press", source.publication_name
+  end
+
+  test "preserves an existing summary when discovery refreshes source metadata" do
+    user = create_user(app_mode: :life)
+    node = create_learning_node(user: user, title: "Ancient Rome")
+    source = create_learning_source(
+      node: node,
+      title: "Existing Rome Source",
+      url: "https://example.com/republic",
+      summary_markdown: "## Existing Summary\n\nKept.",
+      extraction_status: :summarized
+    )
+
+    payload = {
+      "sources" => [
+        {
+          "title" => "Updated Rome Source",
+          "url" => "https://example.com/republic",
+          "quality_score" => 92,
+          "why_relevant" => "Fresh metadata only."
+        }
+      ]
+    }
+
+    LearningSourceDiscoveryService.new(node: node).call(payload: payload)
+
+    assert_equal "Updated Rome Source", source.reload.title
+    assert_equal 92, source.quality_score
+    assert_equal "## Existing Summary\n\nKept.", source.summary_markdown
+    assert source.summarized?
   end
 end

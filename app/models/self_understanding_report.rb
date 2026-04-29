@@ -1,16 +1,6 @@
 class SelfUnderstandingReport < ApplicationRecord
   FRAMEWORK_NAME = "Nine Currents".freeze
-  CURRENT_ORDER = %w[
-    Drive
-    Stability
-    Connection
-    Agency
-    Reflection
-    Expression
-    Resilience
-    Curiosity
-    Integration
-  ].freeze
+  CURRENT_ORDER = NineCurrents.names.freeze
 
   belongs_to :user
 
@@ -32,5 +22,9 @@ class SelfUnderstandingReport < ApplicationRecord
   def ordered_currents
     indexed = currents.index_by { |current| current["name"] || current[:name] }
     CURRENT_ORDER.filter_map { |name| indexed[name] }
+  end
+
+  def current_definition(name)
+    NineCurrents.definition_for(name)
   end
 end

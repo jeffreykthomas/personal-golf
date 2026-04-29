@@ -18,14 +18,24 @@ class GenerateSelfUnderstandingReportsJob < ApplicationJob
     evaluation = SelfUnderstandingReportEligibilityService.new(user: user).evaluate
     return unless evaluation.should_generate?
 
-    attributes = SelfUnderstandingReportBuilderService.new(
+    builder = SelfUnderstandingReportBuilderService.new(
       user: user,
       source_snapshot: evaluation.source_snapshot,
       source_digest: evaluation.source_digest,
       source_updated_at: evaluation.source_updated_at,
       latest_report: evaluation.latest_report
-    ).call
+    )
 
-    user.self_understanding_reports.create!(attributes)
+    report_payload = NanoclawSelfUnderstandingReportBridgeService.generate_report(
+      user: user,
+      source_digest: evaluation.source_digest,
+      prompt: builder.prompt
+    )
+
+    SelfUnderstandingReportPersistenceService.new(
+      user: user,
+      evaluation: evaluation,
+      report_payload: report_payload
+    ).call
   end
 end

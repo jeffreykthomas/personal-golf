@@ -24,7 +24,7 @@ class LearningRebalancingServiceTest < ActiveSupport::TestCase
       ]
     }
 
-    GeminiService.stub(:generate_structured_payload, payload) do
+    NanoclawLearningBridgeService.stub(:rebalance_node, payload) do
       assert LearningRebalancingService.new(node: node).call
     end
 

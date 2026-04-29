@@ -10,8 +10,14 @@
           An Obsidian-like learning workspace for topics you want to explore with the agent. Add a topic, let the agent gather sources and organize the note, then keep asking questions until the map gets sharper.
         </p>
       </div>
-      <div class="rounded-2xl border border-dark-border bg-dark-surface/60 px-4 py-3 text-sm text-dark-text-muted">
-        The agent keeps current understanding at the top and evidence/history below, so each note compounds over time.
+      <div class="flex flex-col gap-2 md:items-end">
+        <%= link_to learning_graph_path, class: "inline-flex items-center gap-2 rounded-2xl border border-dark-border bg-dark-surface/80 px-4 py-2.5 text-sm font-medium text-white hover:border-accent-400 transition-colors" do %>
+          <span aria-hidden="true">⌬</span>
+          Open vault graph
+        <% end %>
+        <div class="rounded-2xl border border-dark-border bg-dark-surface/60 px-4 py-3 text-sm text-dark-text-muted max-w-md">
+          The agent keeps current understanding at the top and evidence/history below, so each note compounds over time.
+        </div>
       </div>
     </div>
   </div>
@@ -238,6 +244,38 @@
           </div>
 
           <div class="space-y-5">
+            <% suggested_topics = Array(@selected_node.metadata["suggested_child_topics"]).select { |entry| entry.is_a?(Hash) && entry["title"].to_s.present? } %>
+            <% if suggested_topics.any? %>
+              <section class="rounded-3xl border border-dark-border bg-dark-surface/80 p-5">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h3 class="text-lg font-semibold text-white">Suggested Subtopics</h3>
+                    <p class="text-xs text-dark-text-muted mt-1">Agent proposals from the last compile. Nothing is created unless you add it.</p>
+                  </div>
+                  <span class="text-xs text-dark-text-muted"><%= suggested_topics.size %> suggestions</span>
+                </div>
+
+                <ul class="space-y-3">
+                  <% suggested_topics.each do |suggestion| %>
+                    <li class="rounded-2xl border border-dark-border bg-dark-bg/60 p-4">
+                      <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                        <div class="min-w-0">
+                          <h4 class="text-sm font-semibold text-white"><%= suggestion["title"] %></h4>
+                          <% if suggestion["summary"].to_s.present? %>
+                            <p class="mt-1 text-xs leading-5 text-dark-text-muted"><%= suggestion["summary"] %></p>
+                          <% end %>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                          <%= button_to "Add as child", promote_suggestion_learning_node_path(@selected_node, title: suggestion["title"]), method: :post, class: "rounded-full border border-dark-border bg-dark-surface px-3 py-1.5 text-xs font-medium text-white hover:border-accent-400 transition-colors" %>
+                          <%= button_to "Dismiss", dismiss_suggestion_learning_node_path(@selected_node, title: suggestion["title"]), method: :post, class: "rounded-full border border-dark-border bg-dark-bg/70 px-3 py-1.5 text-xs font-medium text-dark-text-muted hover:text-white hover:border-accent-400 transition-colors" %>
+                        </div>
+                      </div>
+                    </li>
+                  <% end %>
+                </ul>
+              </section>
+            <% end %>
+
             <section class="rounded-3xl border border-dark-border bg-dark-surface/80 p-5">
               <div class="flex items-center justify-between gap-3 mb-4">
                 <div>

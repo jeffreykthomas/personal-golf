@@ -1,9 +1,6 @@
 module Internal
-  class CoachInsightsController < ApplicationController
+  class CoachInsightsController < BaseController
     allow_unauthenticated_access only: :create
-    skip_forgery_protection
-
-    before_action :require_bridge_auth!
     before_action :set_coach_session
 
     def create
@@ -32,14 +29,6 @@ module Internal
     end
 
     private
-
-    def require_bridge_auth!
-      token = ENV["CLAW_SIBLING_TOKEN"].presence
-      return if token.blank?
-      return if request.authorization == "Bearer #{token}"
-
-      render json: { error: "unauthorized" }, status: :unauthorized
-    end
 
     def set_coach_session
       @coach_session = CoachSession.find(params[:coach_session_id])

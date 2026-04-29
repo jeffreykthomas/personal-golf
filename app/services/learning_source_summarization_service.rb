@@ -13,7 +13,7 @@ class LearningSourceSummarizationService
     extracted = extract_content
     content = extracted[:content].to_s
 
-    if content.blank?
+    if content.blank? && @source.upload?
       @source.update!(
         extraction_status: :needs_review,
         summary_markdown: fallback_summary_markdown(extracted[:title]),
@@ -23,11 +23,10 @@ class LearningSourceSummarizationService
       return @source
     end
 
-    payload = GeminiService.generate_structured_payload(
-      prompt: build_prompt(content:, extracted_title: extracted[:title]),
-      temperature: 0.3,
-      max_output_tokens: 1_600,
-      label: "Gemini learning source summarization"
+    payload = NanoclawLearningBridgeService.summarize_source(
+      source: @source,
+      extracted_content: content,
+      extracted_title: extracted[:title]
     )
 
     @source.update!(
@@ -36,9 +35,10 @@ class LearningSourceSummarizationService
       extracted_content: content,
       content_hash: Digest::SHA256.hexdigest(content),
       extraction_status: :summarized,
-      metadata: (@source.metadata || {}).merge(
+      metadata: (@source.metadata || {}).except("last_error").merge(
         "last_summarized_at" => Time.current.iso8601,
-        "key_points" => Array(payload&.dig("key_points")).first(5)
+        "key_points" => Array(payload&.dig("key_points")).first(5),
+        "last_summarized_by" => "nanoclaw"
       )
     )
 
@@ -50,32 +50,6 @@ class LearningSourceSummarizationService
   end
 
   private
-
-  def build_prompt(content:, extracted_title:)
-    <<~PROMPT
-      You are summarizing a source for a learning workspace.
-
-      Source metadata:
-      - Title: #{extracted_title.presence || @source.title}
-      - URL: #{@source.url || "Uploaded file"}
-      - Publication: #{@source.publication_name || "Unknown"}
-      - Author: #{@source.author_name || "Unknown"}
-
-      Task:
-      Produce a concise but high-signal summary that helps a user learn the topic.
-      Be explicit about what the source is about, why it matters, and any limitations or scope boundaries.
-
-      Return valid JSON only:
-      {
-        "title": "Cleaned title",
-        "summary_markdown": "Markdown summary with short sections or bullets",
-        "key_points": ["point one", "point two", "point three"]
-      }
-
-      Source content:
-      #{content}
-    PROMPT
-  end
 
   def extract_content
     return extract_upload_content if @source.upload?

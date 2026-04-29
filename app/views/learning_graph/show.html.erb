@@ -1,0 +1,120 @@
+<%= turbo_stream_from current_user.learning_workspace_stream_name %>
+
+<div class="max-w-7xl mx-auto px-4 py-6 md:px-6">
+  <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <div>
+      <p class="text-xs uppercase tracking-[0.2em] text-accent-400 mb-2">Life Mode</p>
+      <h1 class="text-3xl font-semibold text-white">Vault Graph</h1>
+      <p class="text-dark-text-muted mt-2 max-w-3xl">
+        Spatial view of every topic in your vault. Hierarchy edges are solid, related links are dashed, and wikilinks are dotted. Click a node to inspect, double-click to open it.
+      </p>
+    </div>
+    <div class="flex items-center gap-2 text-xs text-dark-text-muted">
+      <span class="rounded-full bg-dark-bg/80 px-3 py-1.5"><%= @node_count %> nodes</span>
+      <span class="rounded-full bg-dark-bg/80 px-3 py-1.5"><%= @edge_count %> edges</span>
+      <%= link_to "Back to vault", learning_path, class: "rounded-full border border-dark-border bg-dark-surface px-3 py-1.5 hover:border-accent-400 transition-colors text-white" %>
+    </div>
+  </div>
+
+  <div data-controller="learning-graph"
+       data-learning-graph-nodes-value="<%= @graph_payload[:nodes].to_json %>"
+       data-learning-graph-edges-value="<%= @graph_payload[:edges].to_json %>"
+       data-learning-graph-node-url-template-value="<%= learning_path(node_id: '__ID__') %>"
+       class="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
+
+    <aside class="space-y-4">
+      <section class="rounded-3xl border border-dark-border bg-dark-surface/70 p-4 space-y-3">
+        <div>
+          <label for="graph-search" class="block text-xs font-medium uppercase tracking-[0.16em] text-dark-text-muted mb-2">Search</label>
+          <input type="search"
+                 id="graph-search"
+                 placeholder="Filter by title…"
+                 data-learning-graph-target="search"
+                 data-action="input->learning-graph#applyFilters"
+                 class="w-full rounded-xl border border-dark-border bg-dark-bg/80 px-3 py-2.5 text-sm text-white placeholder-dark-text-muted focus:outline-none focus:border-accent-500" />
+        </div>
+
+        <div>
+          <p class="text-xs font-medium uppercase tracking-[0.16em] text-dark-text-muted mb-2">Status</p>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <% %w[draft pending_research ready rebalancing archived].each do |status| %>
+              <label class="inline-flex items-center gap-2 rounded-full border border-dark-border bg-dark-bg/60 px-3 py-1.5 text-white cursor-pointer hover:border-accent-400">
+                <input type="checkbox"
+                       value="<%= status %>"
+                       data-learning-graph-target="statusFilter"
+                       data-action="change->learning-graph#applyFilters"
+                       class="accent-accent-500" />
+                <%= status.humanize %>
+              </label>
+            <% end %>
+          </div>
+          <p class="text-[11px] text-dark-text-muted mt-2">Leave all unchecked to show every status.</p>
+        </div>
+
+        <div>
+          <p class="text-xs font-medium uppercase tracking-[0.16em] text-dark-text-muted mb-2">Relations</p>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <% [["hierarchy", "Hierarchy"], ["related", "Related"], ["wikilink", "Wikilink"]].each do |kind, label| %>
+              <label class="inline-flex items-center gap-2 rounded-full border border-dark-border bg-dark-bg/60 px-3 py-1.5 text-white cursor-pointer hover:border-accent-400">
+                <input type="checkbox"
+                       value="<%= kind %>"
+                       data-learning-graph-target="relationFilter"
+                       data-action="change->learning-graph#applyFilters"
+                       class="accent-accent-500" />
+                <%= label %>
+              </label>
+            <% end %>
+          </div>
+          <p class="text-[11px] text-dark-text-muted mt-2">Leave all unchecked to show every relation.</p>
+        </div>
+
+        <div class="flex flex-wrap gap-2 pt-2">
+          <button type="button"
+                  data-action="learning-graph#recenter"
+                  class="rounded-full border border-dark-border bg-dark-bg/70 px-3 py-1.5 text-xs font-medium text-white hover:border-accent-400 transition-colors">
+            Recenter
+          </button>
+          <button type="button"
+                  data-action="learning-graph#rerunLayout"
+                  class="rounded-full border border-dark-border bg-dark-bg/70 px-3 py-1.5 text-xs font-medium text-white hover:border-accent-400 transition-colors">
+            Re-layout
+          </button>
+        </div>
+      </section>
+
+      <section class="hidden rounded-3xl border border-dark-border bg-dark-surface/80 p-4 space-y-3"
+               data-learning-graph-target="info">
+        <div class="flex items-start justify-between gap-3">
+          <h3 class="text-base font-semibold text-white" data-learning-graph-target="infoTitle">Selected node</h3>
+        </div>
+        <p class="text-[11px] text-dark-text-muted" data-learning-graph-target="infoMeta"></p>
+        <p class="text-sm leading-6 text-dark-text-muted" data-learning-graph-target="infoSummary"></p>
+        <a href="#"
+           data-learning-graph-target="infoLink"
+           class="inline-flex items-center justify-center rounded-xl border border-dark-border bg-dark-bg/70 px-3 py-2 text-xs font-medium text-white hover:border-accent-400">
+          Open in vault →
+        </a>
+      </section>
+
+      <section class="rounded-3xl border border-dark-border bg-dark-surface/60 p-4 text-[11px] text-dark-text-muted leading-5">
+        <p class="font-semibold text-white text-xs mb-2">Legend</p>
+        <ul class="space-y-1.5">
+          <li><span class="inline-block w-3 h-3 rounded-full bg-[#22c55e] align-middle mr-2"></span>Border = status (ready, pending, etc.)</li>
+          <li><span class="inline-block w-3 h-3 rounded-full bg-[#38bdf8] align-middle mr-2"></span>Fill = root topic cluster</li>
+          <li>Solid line = hierarchy (parent → child)</li>
+          <li>Dashed = explicit related link</li>
+          <li>Dotted = `[[wikilink]]` reference</li>
+        </ul>
+      </section>
+    </aside>
+
+    <section class="rounded-3xl border border-dark-border bg-dark-surface/60 p-2 min-h-[70vh] relative overflow-hidden">
+      <div class="hidden absolute inset-0 flex items-center justify-center px-6 text-center text-dark-text-muted text-sm"
+           data-learning-graph-target="empty">
+        Your vault is empty. Add a topic from the <%= link_to "vault page", learning_path, class: "underline hover:text-white" %> to start the graph.
+      </div>
+      <div class="w-full h-[70vh] rounded-2xl bg-dark-bg/40"
+           data-learning-graph-target="canvas"></div>
+    </section>
+  </div>
+</div>

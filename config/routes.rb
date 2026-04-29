@@ -25,15 +25,20 @@ Rails.application.routes.draw do
   end
 
   # Main app routes
-  resource :settings, only: [:show, :update]
+  resource :settings, only: [:show, :update] do
+    post :trigger_arccos_sync
+  end
   resource :self_understanding_report, only: [:show]
   get "learning", to: "learning#show", as: :learning
+  get "learning/graph", to: "learning_graph#show", as: :learning_graph
 
   resources :learning_nodes, only: [:create, :update] do
     member do
       post :discover_sources
       post :compile
       post :rebalance
+      post :promote_suggestion
+      post :dismiss_suggestion
     end
 
     resources :learning_sources, only: [:create] do
@@ -91,6 +96,20 @@ Rails.application.routes.draw do
   end
 
   namespace :internal do
+    resources :self_understanding_reports, only: [:create], controller: "self_understanding_reports" do
+      collection do
+        get :pending
+      end
+    end
+
+    resources :arccos_syncs, only: [:create], controller: "arccos_syncs" do
+      collection do
+        get :pending
+        post :start
+        post :fail
+      end
+    end
+
     resources :coach_sessions, only: [] do
       resources :insights, only: [:create], controller: "coach_insights"
     end

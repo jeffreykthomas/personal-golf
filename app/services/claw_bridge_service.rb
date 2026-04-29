@@ -58,7 +58,7 @@ class ClawBridgeService
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = uri.scheme == "https"
       http.open_timeout = 5
-      http.read_timeout = 90
+      http.read_timeout = 240
 
       request = Net::HTTP::Post.new(uri.request_uri, request_headers)
       request.body = payload.to_json

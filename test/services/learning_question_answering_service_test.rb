@@ -13,7 +13,10 @@ class LearningQuestionAnsweringServiceTest < ActiveSupport::TestCase
       title: "Roman institutions",
       summary_markdown: "## Source Overview\n\nThis source explains the senate, magistrates, and assemblies."
     )
-    question = node.learning_questions.create!(question_text: "What institutions mattered most?")
+    question = node.learning_questions.create!(
+      question_text: "What institutions mattered most?",
+      metadata: { "last_error" => "old failure" }
+    )
 
     payload = {
       "answer_markdown" => "## Answer\n\nThe senate, magistracies, and assemblies formed the institutional core.",
@@ -26,12 +29,13 @@ class LearningQuestionAnsweringServiceTest < ActiveSupport::TestCase
       ]
     }
 
-    GeminiService.stub(:generate_structured_payload, payload) do
+    NanoclawLearningBridgeService.stub(:answer_question, payload) do
       LearningQuestionAnsweringService.new(question: question).call
     end
 
     assert question.reload.answered?
     assert_includes question.answer_markdown, "senate"
     assert_equal source.id, question.citations_data.first["source_id"]
+    assert_nil question.metadata["last_error"]
   end
 end

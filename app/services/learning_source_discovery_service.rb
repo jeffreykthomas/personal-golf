@@ -1,3 +1,4 @@
+require "digest"
 require "cgi"
 require "uri"
 
@@ -8,17 +9,13 @@ class LearningSourceDiscoveryService
     @node = node
   end
 
-  def call
-    payload = NanoclawLearningBridgeService.discover_sources(node: @node) || GeminiService.generate_structured_payload(
-      prompt: build_prompt,
-      temperature: 0.3,
-      max_output_tokens: 2_000,
-      label: "Gemini learning source discovery"
-    )
+  def call(payload: nil)
+    payload ||= NanoclawLearningBridgeService.discover_sources(node: @node)
+    apply_sources(payload["sources"])
+  end
 
-    sources = normalize_sources(payload&.dig("sources"))
-    sources = fallback_sources if sources.empty?
-
+  def apply_sources(raw_sources)
+    sources = normalize_sources(raw_sources)
     created_sources = sources.filter_map do |source_data|
       create_or_update_source(source_data)
     end
@@ -26,7 +23,8 @@ class LearningSourceDiscoveryService
     @node.update!(
       metadata: @node.metadata.merge(
         "last_discovered_at" => Time.current.iso8601,
-        "last_discovery_count" => created_sources.count
+        "last_discovery_count" => created_sources.count,
+        "last_discovery_source" => "nanoclaw"
       )
     )
 
@@ -81,9 +79,11 @@ class LearningSourceDiscoveryService
         author_name: entry["author_name"].to_s.strip.presence,
         published_on: normalize_date(entry["published_on"]),
         quality_score: normalize_quality_score(entry["quality_score"]),
+        summary_markdown: entry["summary_markdown"].to_s.strip.presence,
         metadata: {
           "why_relevant" => entry["why_relevant"].to_s.strip.presence,
-          "discovered_by" => "agent"
+          "key_points" => Array(entry["key_points"]).filter_map { |point| point.to_s.strip.presence }.first(5),
+          "discovered_by" => "nanoclaw"
         }.compact
       }
     end.first(DISCOVERY_LIMIT)
@@ -91,55 +91,31 @@ class LearningSourceDiscoveryService
 
   def create_or_update_source(source_data)
     source = @node.learning_sources.find_or_initialize_by(url: source_data[:url])
+    summary_markdown = source_data[:summary_markdown]
     source.assign_attributes(
       title: source_data[:title],
       publication_name: source_data[:publication_name],
       author_name: source_data[:author_name],
       published_on: source_data[:published_on],
       quality_score: source_data[:quality_score],
-      extraction_status: :discovered,
       metadata: (source.metadata || {}).merge(source_data[:metadata] || {})
     )
+
+    if summary_markdown.present?
+      source.extraction_status = :summarized
+      source.summary_markdown = summary_markdown
+      source.content_hash = Digest::SHA256.hexdigest(summary_markdown)
+    elsif source.summary_markdown.blank?
+      source.extraction_status = :discovered
+      source.summary_markdown = nil
+    end
+
     source.source_type = :agent_found if source.new_record?
     source.save!
     source
   rescue ActiveRecord::RecordInvalid => e
     Rails.logger.warn("Skipping discovered learning source for node=#{@node.id}: #{e.message}")
     nil
-  end
-
-  def fallback_sources
-    topic = CGI.escape(@node.title)
-
-    [
-      {
-        title: "#{@node.title} on Wikipedia",
-        url: "https://en.wikipedia.org/wiki/#{@node.title.to_s.parameterize(separator: '_')}",
-        publication_name: "Wikipedia",
-        author_name: nil,
-        published_on: nil,
-        quality_score: 55,
-        metadata: { "why_relevant" => "Broad reference overview.", "discovered_by" => "fallback" }
-      },
-      {
-        title: "Scholar results for #{@node.title}",
-        url: "https://scholar.google.com/scholar?q=#{topic}",
-        publication_name: "Google Scholar",
-        author_name: nil,
-        published_on: nil,
-        quality_score: 65,
-        metadata: { "why_relevant" => "Academic source discovery starting point.", "discovered_by" => "fallback" }
-      },
-      {
-        title: "arXiv search for #{@node.title}",
-        url: "https://arxiv.org/search/?query=#{topic}&searchtype=all",
-        publication_name: "arXiv",
-        author_name: nil,
-        published_on: nil,
-        quality_score: 70,
-        metadata: { "why_relevant" => "Research repository search results.", "discovered_by" => "fallback" }
-      }
-    ]
   end
 
   def normalize_url(url)

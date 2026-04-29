@@ -6,5 +6,6 @@ class LearningSourceSummarizationJob < ApplicationJob
 
     LearningSourceSummarizationService.new(source: source).call
     LearningNodeCompilationService.new(node: source.learning_node).call
+    LearningRebalancingService.new(node: source.learning_node).call if source.learning_node.reload.crowded?
   end
 end

@@ -43,5 +43,6 @@ class SelfUnderstandingReportsFlowTest < ActionDispatch::IntegrationTest
     assert_select "h2", text: "Pattern Snapshot"
     assert_select "h3", text: "Curiosity"
     assert_includes response.body, "You are balancing curiosity with steadiness."
+    assert_includes response.body, "Loosely echoes Type 7"
   end
 end

@@ -8,7 +8,7 @@ class GenerateSelfUnderstandingReportsJobTest < ActiveSupport::TestCase
     golf_user = create_user(app_mode: :golf, goals: ["build more clarity"])
     golf_user.create_coach_profile!(profile_data: { reflection_style: "thoughtful" })
 
-    GeminiService.stub(:generate_self_understanding_report, gemini_payload) do
+    NanoclawSelfUnderstandingReportBridgeService.stub(:generate_report, report_payload) do
       assert_difference -> { life_user.self_understanding_reports.count }, +1 do
         assert_no_difference -> { golf_user.self_understanding_reports.count } do
           GenerateSelfUnderstandingReportsJob.perform_now
@@ -23,7 +23,7 @@ class GenerateSelfUnderstandingReportsJobTest < ActiveSupport::TestCase
 
   private
 
-  def gemini_payload
+  def report_payload
     {
       "title" => "Pattern Snapshot",
       "body_markdown" => "## Overall pattern\n\nThis is a grounded synthesis.",

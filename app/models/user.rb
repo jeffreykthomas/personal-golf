@@ -12,6 +12,8 @@ class User < ApplicationRecord
   has_many :learning_nodes, dependent: :destroy
   has_many :learning_sources, through: :learning_nodes
   has_many :learning_questions, through: :learning_nodes
+  has_one :arccos_profile, dependent: :destroy
+  has_many :arccos_rounds, dependent: :destroy
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
   

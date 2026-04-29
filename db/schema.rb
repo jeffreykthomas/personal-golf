@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_06_101000) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_18_000000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -37,6 +37,50 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_06_101000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "arccos_profiles", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.float "handicap_index"
+    t.float "scoring_average"
+    t.integer "rounds_tracked"
+    t.json "smart_distances", default: {}, null: false
+    t.json "aggregate_strokes_gained", default: {}, null: false
+    t.json "metadata", default: {}, null: false
+    t.datetime "last_synced_at"
+    t.string "last_sync_source_digest"
+    t.string "last_sync_status", default: "pending", null: false
+    t.text "last_sync_error"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_arccos_profiles_on_user_id", unique: true
+  end
+
+  create_table "arccos_rounds", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "external_id"
+    t.date "played_on", null: false
+    t.string "course_name", null: false
+    t.string "course_external_id"
+    t.integer "holes_played", default: 18, null: false
+    t.integer "total_score"
+    t.integer "total_par"
+    t.integer "putts"
+    t.integer "greens_in_regulation"
+    t.integer "fairways_hit"
+    t.integer "fairways_attempted"
+    t.float "sg_total"
+    t.float "sg_putting"
+    t.float "sg_short_game"
+    t.float "sg_approach"
+    t.float "sg_off_tee"
+    t.json "raw_payload", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "course_name"], name: "index_arccos_rounds_on_user_id_and_course_name"
+    t.index ["user_id", "external_id"], name: "index_arccos_rounds_on_user_id_and_external_id", unique: true, where: "external_id IS NOT NULL"
+    t.index ["user_id", "played_on"], name: "index_arccos_rounds_on_user_id_and_played_on"
+    t.index ["user_id"], name: "index_arccos_rounds_on_user_id"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -432,6 +476,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_06_101000) do
     t.index ["skill_level"], name: "index_users_on_skill_level"
   end
 
+  add_foreign_key "arccos_profiles", "users"
+  add_foreign_key "arccos_rounds", "users"
   add_foreign_key "coach_messages", "coach_sessions"
   add_foreign_key "coach_messages", "tips"
   add_foreign_key "coach_profiles", "users"

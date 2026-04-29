@@ -10,25 +10,17 @@ class SelfUnderstandingReportBuilderService
     @latest_report = latest_report
   end
 
-  def call
-    payload = GeminiService.generate_self_understanding_report(prompt: build_prompt)
-    raise "self_understanding_report_generation_failed" if payload.blank?
-
+  def request_payload
     {
       framework_name: FRAMEWORK_NAME,
-      title: payload["title"].presence || "Self-Understanding Report",
-      body_markdown: payload["body_markdown"].presence || fallback_body_markdown(payload),
-      currents_data: { "currents" => normalize_currents(payload["currents"]) },
-      source_snapshot: @source_snapshot,
-      source_digest: @source_digest,
-      source_updated_at: @source_updated_at,
-      generated_at: Time.current
-    }
+      current_order: CURRENT_ORDER,
+      current_definitions: NineCurrents::DEFINITIONS.map(&:to_h),
+      prompt: prompt,
+      source_updated_at: @source_updated_at&.iso8601
+    }.compact
   end
 
-  private
-
-  def build_prompt
+  def prompt
     <<~PROMPT
       You are generating a reflective personal synthesis for a product called Personal Life.
 
@@ -36,10 +28,13 @@ class SelfUnderstandingReportBuilderService
       Produce a comprehensive Self-Understanding Report based only on the evidence provided.
       The framework name is "#{FRAMEWORK_NAME}".
       It is inspired by enneagram-style pattern recognition, but it is not the enneagram and must not map the user to a fixed type.
-      Treat these as dynamic currents that move through a person's behavior over time.
+      Treat these as dynamic currents that move through a person's behavior over time. A person can express many currents at once.
 
       The nine currents are:
       #{CURRENT_ORDER.join(', ')}
+
+      Current definitions:
+      #{NineCurrents.prompt_context}
 
       Output requirements:
       - Return valid JSON only.
@@ -68,6 +63,8 @@ class SelfUnderstandingReportBuilderService
       - Keep scores as integers from 1 to 10.
       - Each summary should be grounded in the evidence.
       - Each signals array should have 1 to 3 concise evidence points.
+      - Use the current definitions as lenses, not as fixed personality labels.
+      - Do not mention Enneagram numbers in the report unless the user explicitly asks.
 
       Previous report for continuity (if any):
       #{previous_report_context}
@@ -76,6 +73,22 @@ class SelfUnderstandingReportBuilderService
       #{JSON.pretty_generate(@source_snapshot)}
     PROMPT
   end
+
+  def build_attributes(report_payload:, generated_at: Time.current)
+    payload = report_payload.to_h.deep_stringify_keys
+    {
+      framework_name: FRAMEWORK_NAME,
+      title: payload["title"].presence || "Self-Understanding Report",
+      body_markdown: payload["body_markdown"].presence || fallback_body_markdown(payload),
+      currents_data: { "currents" => normalize_currents(payload["currents"]) },
+      source_snapshot: @source_snapshot,
+      source_digest: @source_digest,
+      source_updated_at: @source_updated_at,
+      generated_at: generated_at
+    }
+  end
+
+  private
 
   def previous_report_context
     return "None yet." unless @latest_report.present?

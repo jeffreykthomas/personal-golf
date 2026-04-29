@@ -5,17 +5,11 @@ class LearningRebalancingService
     @node = node
   end
 
-  def call
+  def call(payload: nil)
     movable_children = @node.children.where.not(node_kind: :cluster).order(:position, :title).to_a
     return false if movable_children.count <= LearningNode::MAX_CHILDREN_PER_LEVEL
 
-    payload = NanoclawLearningBridgeService.rebalance_node(node: @node) || GeminiService.generate_structured_payload(
-      prompt: build_prompt(movable_children),
-      temperature: 0.25,
-      max_output_tokens: 1_800,
-      label: "Gemini learning rebalancing"
-    )
-
+    payload ||= NanoclawLearningBridgeService.rebalance_node(node: @node)
     buckets = normalize_buckets(payload&.dig("buckets"))
     return false if buckets.empty?
 
@@ -42,7 +36,10 @@ class LearningRebalancingService
 
     @node.update!(
       status: :ready,
-      metadata: @node.metadata.merge("last_rebalanced_at" => Time.current.iso8601)
+      metadata: @node.metadata.merge(
+        "last_rebalanced_at" => Time.current.iso8601,
+        "last_rebalanced_by" => "nanoclaw"
+      )
     )
 
     true

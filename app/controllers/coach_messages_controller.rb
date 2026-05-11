@@ -35,20 +35,24 @@ class CoachMessagesController < ApplicationController
 
     stream_assistant_deltas!(request_id: request_id, text: bridge_result[:text].to_s)
 
+    assistant_metadata = {
+      request_id: request_id,
+      source: bridge_result[:source],
+      actions: action_results
+    }
+    assistant_metadata[:prompt] = bridge_result[:prompt] if bridge_result[:prompt].is_a?(Hash)
+
     assistant_message = @coach_session.coach_messages.create!(
       role: :assistant,
       modality: :text,
       content: bridge_result[:text].to_s,
       request_id: request_id,
-      metadata: {
-        request_id: request_id,
-        source: bridge_result[:source],
-        actions: action_results
-      }
+      metadata: assistant_metadata
     )
 
     payload = assistant_message.as_payload
     payload[:actions] = action_results
+    payload[:prompt] ||= bridge_result[:prompt] if bridge_result[:prompt].is_a?(Hash)
 
     broadcast!(
       Coach::EventContract.assistant_done(

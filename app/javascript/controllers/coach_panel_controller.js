@@ -220,7 +220,8 @@ export default class extends Controller {
   }
 
   renderInlinePromptCard(prompt, { isLatest = true } = {}) {
-    if (!prompt || prompt.kind !== "persona_question") {
+    if (!prompt) return null;
+    if (prompt.kind !== "persona_question" && prompt.kind !== "persona_dilemma") {
       return null;
     }
 
@@ -228,10 +229,19 @@ export default class extends Controller {
       this.disablePromptCard(this.activePromptCardSlot.element, "Replaced by a newer question");
     }
 
+    if (prompt.kind === "persona_dilemma") {
+      return this.renderDilemmaCard(prompt, { isLatest });
+    }
+
+    return this.renderQuestionCard(prompt, { isLatest });
+  }
+
+  renderQuestionCard(prompt, { isLatest = true } = {}) {
     const isMulti = !!prompt.multi_select;
     const card = document.createElement("div");
     card.className = "max-w-[92%] rounded-2xl border border-dark-border bg-dark-surface/70 px-4 py-3 mt-1 space-y-3";
     card.dataset.personaSlot = prompt.slot || "";
+    card.dataset.personaKind = prompt.kind;
 
     const header = document.createElement("div");
     header.className = "flex items-center justify-between gap-2";
@@ -255,30 +265,31 @@ export default class extends Controller {
     chipsRow.className = "flex flex-wrap gap-2";
     const selected = new Set();
     const chipButtons = [];
+    const options = this.normalizeOptions(prompt.options);
 
-    (prompt.options || []).forEach((option) => {
+    options.forEach((option) => {
       const chip = document.createElement("button");
       chip.type = "button";
-      chip.dataset.value = option;
+      chip.dataset.value = option.id;
       chip.className = this.personaChipClass(false);
-      chip.textContent = option;
+      chip.textContent = option.label;
       chip.style.minHeight = "44px";
       chip.addEventListener("click", () => {
         if (card.dataset.disabled === "true") return;
         if (isMulti) {
-          if (selected.has(option)) {
-            selected.delete(option);
+          if (selected.has(option.id)) {
+            selected.delete(option.id);
           } else {
-            const max = prompt.max_options || prompt.options?.length || 3;
+            const max = prompt.max_options || options.length || 3;
             if (selected.size >= max) {
               const oldest = selected.values().next().value;
               selected.delete(oldest);
               const oldChip = chipButtons.find((b) => b.dataset.value === oldest);
               if (oldChip) oldChip.className = this.personaChipClass(false);
             }
-            selected.add(option);
+            selected.add(option.id);
           }
-          chip.className = this.personaChipClass(selected.has(option));
+          chip.className = this.personaChipClass(selected.has(option.id));
           submitButton.disabled = selected.size === 0 && !freeformInput.value.trim();
         } else {
           this.submitPersonaAnswer(prompt, [option], freeformInput.value.trim(), card);
@@ -304,7 +315,8 @@ export default class extends Controller {
         event.preventDefault();
         const text = freeformInput.value.trim();
         if (!text && (!isMulti || selected.size === 0)) return;
-        this.submitPersonaAnswer(prompt, Array.from(selected), text, card);
+        const chosen = Array.from(selected).map((id) => options.find((o) => o.id === id) || { id, label: id });
+        this.submitPersonaAnswer(prompt, chosen, text, card);
       }
     });
     freeformWrap.appendChild(freeformInput);
@@ -334,9 +346,9 @@ export default class extends Controller {
     submitButton.addEventListener("click", () => {
       if (card.dataset.disabled === "true") return;
       const text = freeformInput.value.trim();
-      const values = Array.from(selected);
-      if (values.length === 0 && !text) return;
-      this.submitPersonaAnswer(prompt, values, text, card);
+      const chosen = Array.from(selected).map((id) => options.find((o) => o.id === id) || { id, label: id });
+      if (chosen.length === 0 && !text) return;
+      this.submitPersonaAnswer(prompt, chosen, text, card);
     });
 
     actionsRow.append(skipButton, submitButton);
@@ -352,11 +364,143 @@ export default class extends Controller {
     return card;
   }
 
+  renderDilemmaCard(prompt, { isLatest = true } = {}) {
+    const card = document.createElement("div");
+    card.className = "max-w-[94%] rounded-2xl border border-dark-border bg-dark-surface/70 px-4 py-3 mt-1 space-y-3";
+    card.dataset.personaDilemma = prompt.dilemma_id || "";
+    card.dataset.personaKind = prompt.kind;
+
+    const header = document.createElement("div");
+    header.className = "flex items-center justify-between gap-2";
+
+    const label = document.createElement("p");
+    label.className = "text-[11px] uppercase tracking-wide text-accent-400 font-semibold";
+    label.textContent = prompt.label || "Quick scenario";
+
+    const hint = document.createElement("p");
+    hint.className = "text-[11px] text-dark-text-muted";
+    hint.textContent = "Pick the closest";
+    header.append(label, hint);
+
+    const titleEl = document.createElement("p");
+    titleEl.className = "text-sm text-dark-text font-semibold";
+    titleEl.textContent = prompt.title || "";
+
+    if (prompt.scenario && prompt.scenario.trim()) {
+      const scenarioEl = document.createElement("p");
+      scenarioEl.className = "text-sm text-dark-text leading-snug whitespace-pre-wrap";
+      scenarioEl.textContent = prompt.scenario;
+      card.append(header, titleEl, scenarioEl);
+    } else {
+      card.append(header, titleEl);
+    }
+
+    const promptEl = document.createElement("p");
+    promptEl.className = "text-xs text-dark-text-muted italic";
+    promptEl.textContent = prompt.short_prompt || "";
+    card.append(promptEl);
+
+    const optionsCol = document.createElement("div");
+    optionsCol.className = "flex flex-col gap-2";
+    const options = this.normalizeOptions(prompt.options);
+    options.forEach((option) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = this.dilemmaOptionClass();
+      button.style.minHeight = "44px";
+      button.textContent = option.label;
+      button.dataset.optionId = option.id;
+      button.addEventListener("click", () => {
+        if (card.dataset.disabled === "true") return;
+        this.submitDilemmaAnswer(prompt, option, freeformInput.value.trim(), card);
+      });
+      optionsCol.appendChild(button);
+    });
+    card.append(optionsCol);
+
+    let freeformInput;
+    if (prompt.allow_freeform) {
+      const freeformWrap = document.createElement("div");
+      freeformWrap.className = "flex flex-col gap-2";
+      freeformInput = document.createElement("input");
+      freeformInput.type = "text";
+      freeformInput.placeholder = "Or describe what you'd actually do…";
+      freeformInput.className = "w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-dark-text placeholder-dark-text-muted focus-ring";
+      freeformInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          const text = freeformInput.value.trim();
+          if (!text) return;
+          this.submitDilemmaAnswer(prompt, null, text, card);
+        }
+      });
+      freeformWrap.appendChild(freeformInput);
+      card.append(freeformWrap);
+    } else {
+      freeformInput = { value: "" };
+    }
+
+    const actionsRow = document.createElement("div");
+    actionsRow.className = "flex items-center justify-between gap-2 pt-1";
+
+    const skipButton = document.createElement("button");
+    skipButton.type = "button";
+    skipButton.className = "text-xs text-dark-text-muted hover:text-white transition-colors";
+    skipButton.textContent = "Skip this one";
+    skipButton.style.minHeight = "44px";
+    skipButton.addEventListener("click", () => {
+      if (card.dataset.disabled === "true") return;
+      this.submitPersonaSkip(prompt, card);
+    });
+
+    const sendFreeform = document.createElement("button");
+    sendFreeform.type = "button";
+    sendFreeform.className = "px-3 py-1.5 rounded-full bg-accent-500 text-white text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed";
+    sendFreeform.textContent = "Send my answer";
+    sendFreeform.style.minHeight = "44px";
+    if (!prompt.allow_freeform) {
+      sendFreeform.classList.add("hidden");
+    } else {
+      sendFreeform.disabled = true;
+      freeformInput.addEventListener("input", () => {
+        sendFreeform.disabled = !freeformInput.value.trim();
+      });
+      sendFreeform.addEventListener("click", () => {
+        if (card.dataset.disabled === "true") return;
+        const text = freeformInput.value.trim();
+        if (!text) return;
+        this.submitDilemmaAnswer(prompt, null, text, card);
+      });
+    }
+
+    actionsRow.append(skipButton, sendFreeform);
+    card.append(actionsRow);
+
+    this.appendToMessages(card);
+    if (isLatest) {
+      this.activePromptCardSlot = { slot: prompt.dilemma_id, element: card };
+    }
+    return card;
+  }
+
+  normalizeOptions(rawOptions) {
+    return (rawOptions || []).map((option) => {
+      if (typeof option === "string") {
+        return { id: option, label: option };
+      }
+      return { id: option.id || option.label, label: option.label || option.id };
+    });
+  }
+
   personaChipClass(active) {
     const base = "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors";
     return active
       ? `${base} bg-accent-500 border-accent-500 text-white`
       : `${base} bg-dark-bg/40 border-dark-border text-dark-text hover:bg-dark-bg/80`;
+  }
+
+  dilemmaOptionClass() {
+    return "w-full text-left px-3 py-2.5 rounded-xl border border-dark-border bg-dark-bg/40 text-sm text-dark-text hover:bg-dark-bg/80 hover:border-accent-500/60 transition-colors";
   }
 
   disablePromptCard(card, reason) {
@@ -374,8 +518,9 @@ export default class extends Controller {
     }
   }
 
-  async submitPersonaAnswer(prompt, values, freeform, cardElement) {
-    const cleanValues = (values || []).filter((v) => v && v.trim());
+  async submitPersonaAnswer(prompt, chosenOptions, freeform, cardElement) {
+    const options = (chosenOptions || []).filter(Boolean);
+    const cleanValues = options.map((o) => (typeof o === "string" ? o : o.label));
     const cleanFreeform = (freeform || "").trim();
     if (cleanValues.length === 0 && !cleanFreeform) return;
 
@@ -391,8 +536,32 @@ export default class extends Controller {
 
     await this.dispatchCoachMessage(summary, {
       persona_answer: {
+        kind: "persona_question",
         slot: prompt.slot,
         value: cleanValues,
+        freeform: cleanFreeform || null,
+        skipped: false,
+      },
+    });
+  }
+
+  async submitDilemmaAnswer(prompt, option, freeform, cardElement) {
+    const cleanFreeform = (freeform || "").trim();
+    if (!option && !cleanFreeform) return;
+
+    const summary = option ? option.label : cleanFreeform;
+    const echoed = option && cleanFreeform ? `${option.label} — ${cleanFreeform}` : summary;
+
+    this.disablePromptCard(cardElement, `You chose: ${summary}`);
+    if (this.activePromptCardSlot?.element === cardElement) {
+      this.activePromptCardSlot = null;
+    }
+
+    await this.dispatchCoachMessage(echoed, {
+      persona_answer: {
+        kind: "persona_dilemma",
+        dilemma_id: prompt.dilemma_id,
+        option_id: option ? option.id : null,
         freeform: cleanFreeform || null,
         skipped: false,
       },
@@ -404,12 +573,24 @@ export default class extends Controller {
     if (this.activePromptCardSlot?.element === cardElement) {
       this.activePromptCardSlot = null;
     }
-    await this.dispatchCoachMessage(`Skip — ${prompt.label || "this question"}`, {
-      persona_answer: {
-        slot: prompt.slot,
-        skipped: true,
-      },
-    });
+
+    if (prompt.kind === "persona_dilemma") {
+      await this.dispatchCoachMessage(`Skip — ${prompt.title || "this scenario"}`, {
+        persona_answer: {
+          kind: "persona_dilemma",
+          dilemma_id: prompt.dilemma_id,
+          skipped: true,
+        },
+      });
+    } else {
+      await this.dispatchCoachMessage(`Skip — ${prompt.label || "this question"}`, {
+        persona_answer: {
+          kind: "persona_question",
+          slot: prompt.slot,
+          skipped: true,
+        },
+      });
+    }
   }
 
   async dispatchCoachMessage(content, extraContext = {}) {

@@ -24,7 +24,12 @@ class CoachTipActionService
     tip_class = resolve_tip_class(payload)
     tip = find_duplicate_tip(title: title, content: content, tip_class: tip_class) ||
       build_tip(title: title, content: content, payload: payload, tip_class: tip_class)
-    @user.save_tip(tip) if auto_save_tip?(payload, tip_class)
+
+    if auto_save_tip?(payload, tip_class)
+      @user.save_tip(tip)
+      sync_insight_to_learning!(tip)
+    end
+
     store_last_tip_id!(tip.id)
     tip
   end
@@ -32,6 +37,7 @@ class CoachTipActionService
   def save_tip!(tip_id: nil)
     tip = fetch_tip!(tip_id || last_tip_id)
     @user.save_tip(tip)
+    sync_insight_to_learning!(tip)
     tip
   end
 
@@ -168,5 +174,13 @@ class CoachTipActionService
   def store_last_tip_id!(tip_id)
     context = (@coach_session.context_data || {}).merge("last_recommended_tip_id" => tip_id)
     @coach_session.update!(context_data: context)
+  end
+
+  def sync_insight_to_learning!(tip)
+    return unless tip.is_a?(Insight)
+
+    LearningInsightSyncService.new(user: @user).call
+  rescue StandardError => e
+    Rails.logger.warn("learning insight sync failed tip_id=#{tip.id}: #{e.class} #{e.message}")
   end
 end

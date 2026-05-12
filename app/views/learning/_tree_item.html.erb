@@ -1,9 +1,14 @@
+<% child_count = node.children.count %>
+<% expanded = expanded_node_ids.include?(node.id) %>
+
 <li class="space-y-2">
   <%= link_to learning_path(node_id: node.id), class: "block rounded-2xl border px-3 py-3 transition-colors #{selected_node_id == node.id ? 'border-accent-500 bg-accent-500/10' : 'border-dark-border bg-dark-surface/60 hover:border-accent-400'}" do %>
     <div class="flex items-center justify-between gap-3">
       <span class="text-sm font-medium text-white"><%= node.title %></span>
-      <% if node.children.any? %>
-        <span class="rounded-full bg-dark-bg/80 px-2 py-0.5 text-[10px] font-medium text-dark-text-muted"><%= node.children.count %></span>
+      <% if child_count.positive? %>
+        <span class="rounded-full bg-dark-bg/80 px-2 py-0.5 text-[10px] font-medium text-dark-text-muted">
+          <%= expanded ? "−" : "+" %> <%= child_count %>
+        </span>
       <% end %>
     </div>
     <% if node.summary.present? %>
@@ -11,10 +16,10 @@
     <% end %>
   <% end %>
 
-  <% if node.children.any? %>
+  <% if expanded && child_count.positive? %>
     <ul class="ml-4 border-l border-dark-border pl-3 space-y-2">
       <% node.ordered_children.each do |child| %>
-        <%= render "learning/tree_item", node: child, selected_node_id: selected_node_id %>
+        <%= render "learning/tree_item", node: child, selected_node_id: selected_node_id, expanded_node_ids: expanded_node_ids %>
       <% end %>
     </ul>
   <% end %>

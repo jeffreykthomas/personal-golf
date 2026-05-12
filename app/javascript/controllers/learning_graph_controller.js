@@ -36,10 +36,13 @@ export default class extends Controller {
       return
     }
 
+    this.buildNodeIndexes()
+    this.expandedNodeIds = new Set()
     this.rootColors = this.assignRootColors(this.nodesValue)
     this.cy = this.buildCytoscape()
     this.bindEvents()
     this.applyFilters()
+    this.rerunLayout()
   }
 
   disconnect() {
@@ -58,6 +61,23 @@ export default class extends Controller {
     return map
   }
 
+  buildNodeIndexes() {
+    this.nodesByRawId = new Map()
+    this.childrenByParentId = new Map()
+
+    this.nodesValue.forEach((node) => {
+      const id = String(node.id)
+      this.nodesByRawId.set(id, node)
+
+      if (node.parent_id !== null && node.parent_id !== undefined) {
+        const parentId = String(node.parent_id)
+        const children = this.childrenByParentId.get(parentId) || []
+        children.push(id)
+        this.childrenByParentId.set(parentId, children)
+      }
+    })
+  }
+
   buildCytoscape() {
     const elements = []
 
@@ -70,6 +90,7 @@ export default class extends Controller {
           label: node.title,
           status: node.status,
           rootId: node.root_id,
+          parentId: node.parent_id,
           isRoot: node.is_root,
           summary: node.summary,
           sourceCount: node.source_count,
@@ -131,6 +152,10 @@ export default class extends Controller {
         style: { "opacity": 0.15, "text-opacity": 0.15 }
       },
       {
+        selector: "node.hidden",
+        style: { "display": "none" }
+      },
+      {
         selector: "node.highlighted",
         style: { "border-width": 4, "border-color": "#facc15" }
       },
@@ -173,6 +198,7 @@ export default class extends Controller {
   bindEvents() {
     this.cy.on("tap", "node", (event) => {
       const node = event.target
+      this.expandNode(node.data("rawId"))
       this.showInfo(node.data())
     })
 
@@ -227,25 +253,48 @@ export default class extends Controller {
     this.navigateToNode(highlighted[0].data("rawId"))
   }
 
+  expandNode(rawId) {
+    const id = String(rawId)
+    const hasChildren = (this.childrenByParentId.get(id) || []).length > 0
+    if (!hasChildren) return
+
+    const before = this.expandedNodeIds.size
+    this.ancestorIdsFor(id).forEach((ancestorId) => this.expandedNodeIds.add(ancestorId))
+    this.expandedNodeIds.add(id)
+
+    if (this.expandedNodeIds.size !== before) {
+      this.applyFilters()
+      this.rerunLayout()
+    }
+  }
+
+  collapseAll() {
+    this.expandedNodeIds = new Set()
+    this.clearInfo()
+    this.applyFilters()
+    this.rerunLayout()
+  }
+
   applyFilters() {
     const query = this.hasSearchTarget ? this.searchTarget.value.trim().toLowerCase() : ""
     const statusValues = this.selectedFilterValues(this.statusFilterTargets)
     const relationValues = this.selectedFilterValues(this.relationFilterTargets)
+    const visibleNodeIds = this.visibleNodeIds(query)
 
     this.cy.batch(() => {
-      this.cy.edges().forEach((edge) => {
-        const kind = edge.data("kind")
-        if (relationValues.length > 0 && !relationValues.includes(kind)) {
-          edge.addClass("hidden")
-        } else {
-          edge.removeClass("hidden")
-        }
-      })
-
       this.cy.nodes().forEach((node) => {
         const data = node.data()
+        const visible = visibleNodeIds.has(String(data.rawId))
         const matchesText = !query || data.label.toLowerCase().includes(query)
         const matchesStatus = statusValues.length === 0 || statusValues.includes(data.status)
+
+        if (!visible) {
+          node.addClass("hidden")
+          node.removeClass("dimmed highlighted")
+          return
+        }
+
+        node.removeClass("hidden")
 
         if (matchesText && matchesStatus) {
           node.removeClass("dimmed")
@@ -254,11 +303,19 @@ export default class extends Controller {
         }
       })
 
-      this.cy.edges(".hidden").connectedNodes().forEach((node) => {
-        // no-op; node visibility is governed by text/status only
-      })
+      this.cy.edges().forEach((edge) => {
+        const kind = edge.data("kind")
+        const relationHidden = relationValues.length > 0 && !relationValues.includes(kind)
+        const endpointHidden = edge.source().hasClass("hidden") || edge.target().hasClass("hidden")
 
-      this.cy.edges().not(".hidden").forEach((edge) => {
+        if (relationHidden || endpointHidden) {
+          edge.addClass("hidden")
+          edge.removeClass("dimmed")
+          return
+        }
+
+        edge.removeClass("hidden")
+
         if (edge.source().hasClass("dimmed") || edge.target().hasClass("dimmed")) {
           edge.addClass("dimmed")
         } else {
@@ -268,18 +325,67 @@ export default class extends Controller {
     })
   }
 
+  visibleNodeIds(query) {
+    const visible = new Set()
+
+    this.nodesValue.forEach((node) => {
+      if (node.is_root) visible.add(String(node.id))
+    })
+
+    if (query) {
+      this.nodesValue.forEach((node) => {
+        if (node.title.toLowerCase().includes(query)) {
+          this.addNodeAndAncestors(visible, String(node.id))
+        }
+      })
+      return visible
+    }
+
+    this.expandedNodeIds.forEach((parentId) => {
+      const childIds = this.childrenByParentId.get(parentId) || []
+      childIds.forEach((childId) => visible.add(childId))
+    })
+
+    return visible
+  }
+
+  addNodeAndAncestors(visible, rawId) {
+    visible.add(rawId)
+    this.ancestorIdsFor(rawId).forEach((ancestorId) => visible.add(ancestorId))
+  }
+
+  ancestorIdsFor(rawId) {
+    const ancestors = []
+    let current = this.nodesByRawId.get(String(rawId))
+    const seen = new Set()
+
+    while (current?.parent_id !== null && current?.parent_id !== undefined) {
+      const parentId = String(current.parent_id)
+      if (seen.has(parentId)) break
+
+      ancestors.push(parentId)
+      seen.add(parentId)
+      current = this.nodesByRawId.get(parentId)
+    }
+
+    return ancestors
+  }
+
   selectedFilterValues(targets) {
     return targets.filter((el) => el.checked).map((el) => el.value)
   }
 
   recenter() {
     if (!this.cy) return
-    this.cy.fit(undefined, 60)
+    this.cy.fit(this.cy.elements().not(".hidden"), 60)
   }
 
   rerunLayout() {
     if (!this.cy) return
-    this.cy.layout(this.layoutOptions()).run()
+    const visibleElements = this.cy.elements().not(".hidden")
+    if (visibleElements.length === 0) return
+
+    this.cy.layout({ ...this.layoutOptions(), eles: visibleElements }).run()
   }
 
   humanize(value) {

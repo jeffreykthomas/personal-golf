@@ -44,7 +44,7 @@
         <% if @root_nodes.any? %>
           <ul class="space-y-3">
             <% @root_nodes.each do |node| %>
-              <%= render "learning/tree_item", node: node, selected_node_id: @selected_node&.id %>
+              <%= render "learning/tree_item", node: node, selected_node_id: @selected_node&.id, expanded_node_ids: @expanded_node_ids %>
             <% end %>
           </ul>
         <% else %>

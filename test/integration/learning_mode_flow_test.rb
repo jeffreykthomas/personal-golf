@@ -33,4 +33,26 @@ class LearningModeFlowTest < ActionDispatch::IntegrationTest
     assert_redirected_to learning_path(node_id: node.id)
     assert node.pending_research?
   end
+
+  test "vault tree expands only the selected branch" do
+    user = create_user(app_mode: :life)
+    root = create_learning_node(user: user, title: "Quantum Physics")
+    child = create_learning_node(user: user, parent: root, title: "Measurement Problem")
+    grandchild = create_learning_node(user: user, parent: child, title: "Bohmian Mechanics")
+
+    sign_in_as(user)
+
+    get learning_path
+    assert_response :success
+    assert_select "aside ul.ml-4", count: 0
+
+    get learning_path(node_id: root.id)
+    assert_response :success
+    assert_select "aside ul.ml-4 a[href='#{learning_path(node_id: child.id)}']", count: 1
+    assert_select "aside ul.ml-4 a[href='#{learning_path(node_id: grandchild.id)}']", count: 0
+
+    get learning_path(node_id: child.id)
+    assert_response :success
+    assert_select "aside ul.ml-4 a[href='#{learning_path(node_id: grandchild.id)}']", count: 1
+  end
 end

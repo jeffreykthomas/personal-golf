@@ -6,7 +6,7 @@
       <p class="text-xs uppercase tracking-[0.2em] text-accent-400 mb-2">Life Mode</p>
       <h1 class="text-3xl font-semibold text-white">Vault Graph</h1>
       <p class="text-dark-text-muted mt-2 max-w-3xl">
-        Spatial view of every topic in your vault. Hierarchy edges are solid, related links are dashed, and wikilinks are dotted. Click a node to inspect, double-click to open it.
+        Spatial view of your vault. Root topics start collapsed; click a node to reveal its immediate children, and double-click to open it.
       </p>
     </div>
     <div class="flex items-center gap-2 text-xs text-dark-text-muted">
@@ -78,6 +78,11 @@
                   data-action="learning-graph#rerunLayout"
                   class="rounded-full border border-dark-border bg-dark-bg/70 px-3 py-1.5 text-xs font-medium text-white hover:border-accent-400 transition-colors">
             Re-layout
+          </button>
+          <button type="button"
+                  data-action="learning-graph#collapseAll"
+                  class="rounded-full border border-dark-border bg-dark-bg/70 px-3 py-1.5 text-xs font-medium text-white hover:border-accent-400 transition-colors">
+            Collapse all
           </button>
         </div>
       </section>

@@ -25,7 +25,7 @@ class SelfUnderstandingReportBuilderService
       You are generating a reflective personal synthesis for a product called Personal Life.
 
       Goal:
-      Produce a comprehensive Self-Understanding Report based only on the evidence provided.
+      Produce a concise Self-Understanding Report based only on the evidence provided.
       The framework name is "#{FRAMEWORK_NAME}".
       It is inspired by enneagram-style pattern recognition, but it is not the enneagram and must not map the user to a fixed type.
       Treat these as dynamic currents that move through a person's behavior over time. A person can express many currents at once.
@@ -42,16 +42,19 @@ class SelfUnderstandingReportBuilderService
       - Be evidence-based, specific, and honest about uncertainty.
       - Do not make medical, psychiatric, or diagnostic claims.
       - Use a warm, observant tone, not therapy-speak or corporate language.
-      - If the evidence is thin, say so explicitly and avoid over-claiming.
+      - If the evidence is thin, avoid over-claiming.
+      - Do not repeat formulaic "no new evidence" or "not enough evidence" caveats across currents.
+      - Use each current's confidence field to carry evidence strength; prose should state what is known, hinted, or genuinely absent only when it helps.
 
       JSON shape:
       {
         "title": "Short report title",
-        "body_markdown": "A markdown report with sections for overall pattern, nine currents summary, tensions, opportunities, and what new evidence would sharpen the picture.",
+        "body_markdown": "A concise markdown report with sections for overall pattern, strongest currents, quieter or hinted currents, tensions, opportunities, and what evidence would sharpen the picture.",
         "currents": [
           {
             "name": "Drive",
             "score": 1,
+            "confidence": "low",
             "summary": "1-2 sentence explanation",
             "signals": ["short evidence point", "short evidence point"]
           }
@@ -61,8 +64,10 @@ class SelfUnderstandingReportBuilderService
       Rules for currents:
       - Return exactly 9 current objects, one for each current listed above.
       - Keep scores as integers from 1 to 10.
-      - Each summary should be grounded in the evidence.
+      - Confidence must be one of "low", "medium", or "high"; it should reflect evidence quantity, quality, recency, and continuity with the previous report.
+      - Each summary should be grounded in the evidence and should state what is known or hinted at directly.
       - Each signals array should have 1 to 3 concise evidence points.
+      - Do not use repeated "no new evidence" phrasing in summaries; lower confidence is the place to show thin or stale evidence.
       - Use the current definitions as lenses, not as fixed personality labels.
       - Do not mention Enneagram numbers in the report unless the user explicitly asks.
 
@@ -104,7 +109,8 @@ class SelfUnderstandingReportBuilderService
       {
         "name" => name,
         "score" => normalize_score(current["score"]),
-        "summary" => current["summary"].to_s.presence || "Not enough evidence yet to describe this current clearly.",
+        "confidence" => normalize_confidence(current["confidence"], current["signals"]),
+        "summary" => current["summary"].to_s.presence || "This current is only lightly sketched by the available evidence.",
         "signals" => Array(current["signals"]).filter_map(&:presence).first(3)
       }
     end
@@ -118,13 +124,26 @@ class SelfUnderstandingReportBuilderService
     number
   end
 
+  def normalize_confidence(value, raw_signals)
+    normalized = value.to_s.downcase
+    return normalized if %w[low medium high].include?(normalized)
+
+    signal_count = Array(raw_signals).filter_map(&:presence).size
+    return "high" if signal_count >= 3
+    return "medium" if signal_count >= 2
+
+    "low"
+  end
+
   def fallback_body_markdown(payload)
     [
       "## Overall pattern",
       payload["title"].presence || "A first-pass self-understanding synthesis is available, but the full narrative came back incomplete.",
       "",
       "## Nine Currents",
-      normalize_currents(payload["currents"]).map { |current| "- #{current['name']}: #{current['summary']}" }
+      normalize_currents(payload["currents"]).map do |current|
+        "- #{current['name']}: #{current['score']}/10, #{current['confidence']} confidence"
+      end
     ].flatten.join("\n")
   end
 end

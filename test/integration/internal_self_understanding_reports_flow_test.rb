@@ -22,6 +22,7 @@ class InternalSelfUnderstandingReportsFlowTest < ActionDispatch::IntegrationTest
     assert_match("Self-Understanding Report", task["prompt"])
     assert_match("Current definitions:", task["prompt"])
     assert_match("Loosely echoes Type", task["prompt"])
+    assert_match("confidence", task["prompt"])
     assert task["source_digest"].present?
   end
 
@@ -49,6 +50,7 @@ class InternalSelfUnderstandingReportsFlowTest < ActionDispatch::IntegrationTest
     assert_equal "Pattern Snapshot", report.title
     assert_equal evaluation.source_digest, report.source_digest
     assert_equal 9, report.currents.size
+    assert_equal "medium", report.currents.first["confidence"]
   end
 
   test "create rejects stale source digests" do
@@ -82,6 +84,7 @@ class InternalSelfUnderstandingReportsFlowTest < ActionDispatch::IntegrationTest
         {
           name: name,
           score: 6,
+          confidence: "medium",
           summary: "#{name} is moderately active right now.",
           signals: ["Observed through recent user behavior."]
         }

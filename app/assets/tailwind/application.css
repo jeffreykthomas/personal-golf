@@ -111,6 +111,63 @@
     background-color: rgba(59, 130, 246, 0.25);
   }
 
+  /* Markdown styling for coach assistant messages */
+  .coach-markdown > *:first-child { margin-top: 0; }
+  .coach-markdown > *:last-child { margin-bottom: 0; }
+  .coach-markdown p { margin: 0.5rem 0; line-height: 1.5; }
+  .coach-markdown strong { font-weight: 600; color: #ffffff; }
+  .coach-markdown em { font-style: italic; }
+  .coach-markdown a { color: var(--color-accent-500); text-decoration: underline; }
+  .coach-markdown ul,
+  .coach-markdown ol { margin: 0.5rem 0; padding-left: 1.25rem; }
+  .coach-markdown ul { list-style: disc; }
+  .coach-markdown ol { list-style: decimal; }
+  .coach-markdown li { margin: 0.25rem 0; }
+  .coach-markdown li > p { margin: 0; }
+  .coach-markdown h1,
+  .coach-markdown h2,
+  .coach-markdown h3,
+  .coach-markdown h4 {
+    color: #ffffff;
+    font-weight: 600;
+    margin: 0.75rem 0 0.25rem;
+    line-height: 1.3;
+  }
+  .coach-markdown h1 { font-size: 1.05rem; }
+  .coach-markdown h2 { font-size: 1rem; }
+  .coach-markdown h3,
+  .coach-markdown h4 { font-size: 0.95rem; }
+  .coach-markdown code {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.25rem;
+    font-size: 0.85em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .coach-markdown pre {
+    background: rgba(0, 0, 0, 0.35);
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 0.5rem 0;
+  }
+  .coach-markdown pre code {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+  }
+  .coach-markdown blockquote {
+    border-left: 3px solid var(--color-dark-border);
+    padding-left: 0.75rem;
+    color: var(--color-dark-text-muted);
+    margin: 0.5rem 0;
+  }
+  .coach-markdown hr {
+    border: none;
+    border-top: 1px solid var(--color-dark-border);
+    margin: 0.75rem 0;
+  }
+
   /* Bottom Navigation */
   .bottom-nav-item {
     display: flex;

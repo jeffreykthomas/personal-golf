@@ -37,6 +37,7 @@ class ApplicationController < ActionController::Base
       controller: controller_name,
       action: action_name,
       path: request.path,
+      app_mode: current_app_mode,
       phase: coach_phase_for_page
     }
 

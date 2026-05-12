@@ -89,6 +89,7 @@ module Internal
         currents: [
           :name,
           :score,
+          :confidence,
           :summary,
           { signals: [] }
         ]

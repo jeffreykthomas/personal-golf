@@ -26,7 +26,7 @@ class SelfUnderstandingReportsFlowTest < ActionDispatch::IntegrationTest
           { "name" => "Reflection", "score" => 7, "summary" => "You revisit patterns after action.", "signals" => ["You compare ideas against prior experience."] },
           { "name" => "Expression", "score" => 6, "summary" => "You value clear articulation.", "signals" => ["You care about the exact framing of a concept."] },
           { "name" => "Resilience", "score" => 7, "summary" => "You keep iterating rather than freezing.", "signals" => ["You change direction without losing momentum."] },
-          { "name" => "Curiosity", "score" => 9, "summary" => "You naturally expand the scope of inquiry.", "signals" => ["You connect product ideas to larger systems."] },
+          { "name" => "Curiosity", "score" => 9, "confidence" => "high", "summary" => "You naturally expand the scope of inquiry.", "signals" => ["You connect product ideas to larger systems."] },
           { "name" => "Integration", "score" => 8, "summary" => "You want insights to accumulate over time.", "signals" => ["You prefer systems where each exploration adds up."] }
         ]
       },
@@ -42,7 +42,10 @@ class SelfUnderstandingReportsFlowTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h2", text: "Pattern Snapshot"
     assert_select "h3", text: "Curiosity"
+    assert_includes response.body, "9/10"
+    assert_includes response.body, "High confidence"
     assert_includes response.body, "You are balancing curiosity with steadiness."
-    assert_includes response.body, "Loosely echoes Type 7"
+    assert_no_match(/You naturally expand the scope of inquiry\./, response.body)
+    assert_no_match(/Loosely echoes Type 7/, response.body)
   end
 end

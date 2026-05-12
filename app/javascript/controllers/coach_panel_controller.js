@@ -1,9 +1,48 @@
 import { Controller } from "@hotwired/stimulus";
 import { subscribeToCoachSession } from "channels/coach_session_channel";
 import ConvaiClient from "lib/voice/convai_client";
+import { marked } from "marked";
+
+marked.setOptions({ breaks: true, gfm: true });
 
 function csrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.content || "";
+}
+
+function isSafeMarkdownUrl(value) {
+  try {
+    const url = new URL(value, window.location.origin);
+    return ["http:", "https:", "mailto:", "tel:"].includes(url.protocol);
+  } catch (_e) {
+    return false;
+  }
+}
+
+function sanitizeMarkdownHtml(html) {
+  const template = document.createElement("template");
+  template.innerHTML = html || "";
+  template.content.querySelectorAll("script, style, iframe, object, embed, link, meta").forEach((node) => node.remove());
+  template.content.querySelectorAll("*").forEach((element) => {
+    Array.from(element.attributes).forEach((attribute) => {
+      const name = attribute.name.toLowerCase();
+      if (name.startsWith("on") || name === "style") {
+        element.removeAttribute(attribute.name);
+      } else if ((name === "href" || name === "src") && !isSafeMarkdownUrl(attribute.value)) {
+        element.removeAttribute(attribute.name);
+      }
+    });
+  });
+  return template.innerHTML;
+}
+
+function renderMarkdown(text) {
+  try {
+    return sanitizeMarkdownHtml(marked.parse(text || ""));
+  } catch (_e) {
+    const div = document.createElement("div");
+    div.textContent = text || "";
+    return div.innerHTML;
+  }
 }
 
 export default class extends Controller {
@@ -167,10 +206,15 @@ export default class extends Controller {
 
   appendMessageBubble(role, content) {
     const bubble = document.createElement("div");
-    bubble.className = role === "user"
-      ? "ml-auto max-w-[85%] rounded-2xl bg-accent-500 px-4 py-2.5 text-sm text-white whitespace-pre-wrap"
-      : "max-w-[85%] rounded-2xl bg-dark-surface border border-dark-border px-4 py-2.5 text-sm text-dark-text whitespace-pre-wrap";
-    bubble.textContent = content;
+    if (role === "user") {
+      bubble.className = "ml-auto max-w-[85%] rounded-2xl bg-accent-500 px-4 py-2.5 text-sm text-white whitespace-pre-wrap";
+      bubble.textContent = content;
+    } else {
+      bubble.className = "max-w-[85%] rounded-2xl bg-dark-surface border border-dark-border px-4 py-2.5 text-sm text-dark-text coach-markdown";
+      bubble.dataset.role = "assistant";
+      bubble.dataset.raw = content || "";
+      bubble.innerHTML = renderMarkdown(content || "");
+    }
     this.appendToMessages(bubble);
     return bubble;
   }
@@ -418,6 +462,16 @@ export default class extends Controller {
     }
   }
 
+  setAssistantBubbleContent(bubble, content) {
+    bubble.dataset.raw = content || "";
+    bubble.innerHTML = renderMarkdown(content || "");
+  }
+
+  appendAssistantBubbleDelta(bubble, delta) {
+    const next = (bubble.dataset.raw || "") + (delta || "");
+    this.setAssistantBubbleContent(bubble, next);
+  }
+
   async sendMessage(event) {
     event.preventDefault();
     const content = this.inputTarget.value.trim();
@@ -510,7 +564,7 @@ export default class extends Controller {
           this.lastDeltaSequenceByRequestId.set(requestId, incomingSequence);
         }
         const bubble = this.ensureStreamingBubble(requestId);
-        bubble.textContent += data.delta;
+        this.appendAssistantBubbleDelta(bubble, data.delta);
         this.scrollToBottomIfNearBottom();
         break;
       case "assistant_done":
@@ -526,7 +580,7 @@ export default class extends Controller {
         if (!completedBubble) {
           this.appendMessageBubble("assistant", data.message?.content || "");
         } else if (data.message?.content) {
-          completedBubble.textContent = data.message.content;
+          this.setAssistantBubbleContent(completedBubble, data.message.content);
         }
         this.streamingBubbleByRequestId.delete(requestId);
         if (data.message?.prompt) {

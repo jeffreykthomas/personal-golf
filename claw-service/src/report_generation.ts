@@ -101,9 +101,19 @@ function normalizeCurrent(current: unknown) {
   return {
     name: typeof data.name === "string" ? data.name : undefined,
     score: typeof data.score === "number" ? data.score : Number(data.score || 0) || undefined,
+    confidence: normalizeConfidence(data.confidence),
     summary: typeof data.summary === "string" ? data.summary : undefined,
     signals: Array.isArray(data.signals)
       ? data.signals.filter((signal): signal is string => typeof signal === "string")
       : undefined,
   };
+}
+
+function normalizeConfidence(value: unknown): "low" | "medium" | "high" | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = value.toLowerCase();
+  return normalized === "low" || normalized === "medium" || normalized === "high" ? normalized : undefined;
 }

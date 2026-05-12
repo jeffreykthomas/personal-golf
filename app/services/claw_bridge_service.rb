@@ -47,6 +47,7 @@ class ClawBridgeService
     return nil unless sibling_enabled?
 
     uri = URI.join(sibling_url, "/v1/coach/respond")
+    enriched_context = context_with_recent_messages(context)
     payload = {
       requestId: @request_id,
       transport: "app",
@@ -54,7 +55,7 @@ class ClawBridgeService
       coachSessionId: @coach_session.id,
       phase: @coach_session.phase,
       message: message,
-      context: context
+      context: enriched_context
     }
 
     response = with_retries(max_attempts: 1) do
@@ -96,6 +97,21 @@ class ClawBridgeService
       Rails.logger.info("Retrying sibling claw request_id=#{@request_id}: #{e.class}")
       retry
     end
+  end
+
+  def context_with_recent_messages(context)
+    base = context.is_a?(Hash) ? context.deep_stringify_keys : {}
+    return base if base["recent_messages"].present?
+
+    recent_messages = @coach_session.coach_messages.order(created_at: :desc).limit(16).reverse.map do |coach_message|
+      {
+        role: coach_message.role,
+        content: coach_message.content.to_s.truncate(1_000),
+        created_at: coach_message.created_at&.iso8601
+      }
+    end
+
+    base.merge("recent_messages" => recent_messages)
   end
 
   def local_fallback_response(message:, context:)

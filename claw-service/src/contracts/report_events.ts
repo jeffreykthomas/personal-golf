@@ -1,6 +1,7 @@
 export type SelfUnderstandingReportCurrent = {
   name?: string;
   score?: number;
+  confidence?: "low" | "medium" | "high";
   summary?: string;
   signals?: string[];
 };

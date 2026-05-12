@@ -20,40 +20,36 @@
       </div>
     </section>
 
-    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mb-6">
-      <% @report.ordered_currents.each do |current| %>
-        <% score = current["score"] || current[:score] %>
-        <% summary = current["summary"] || current[:summary] %>
-        <% signals = Array(current["signals"] || current[:signals]).first(3) %>
-        <% definition = NineCurrents.definition_for(current["name"] || current[:name]) %>
-        <article class="rounded-2xl border border-dark-border bg-dark-surface/70 p-5">
-          <div class="flex items-center justify-between gap-3 mb-3">
-            <h3 class="text-white font-semibold"><%= current["name"] || current[:name] %></h3>
-            <% if score.present? %>
-              <span class="rounded-full bg-accent-500/10 px-2.5 py-1 text-xs font-medium text-accent-300"><%= score %>/10</span>
-            <% end %>
-          </div>
-          <% if definition.present? %>
-            <p class="mb-3 text-xs leading-5 text-accent-200/80"><%= definition.summary %></p>
-          <% end %>
-          <p class="text-sm leading-6 text-dark-text-muted"><%= summary %></p>
-          <% if definition.present? %>
-            <div class="mt-4 rounded-xl border border-dark-border bg-dark-bg/50 px-3 py-2 text-xs leading-5 text-dark-text-muted">
-              <div><span class="font-medium text-dark-text">Inspiration:</span> <%= definition.enneagram_inspiration %></div>
-              <div class="mt-1"><span class="font-medium text-dark-text">Question:</span> <%= definition.growth_question %></div>
-            </div>
-          <% end %>
-          <% if signals.any? %>
-            <div class="mt-4 space-y-2">
-              <% signals.each do |signal| %>
-                <div class="rounded-xl bg-dark-bg/70 px-3 py-2 text-xs leading-5 text-dark-text-muted">
-                  <%= signal %>
-                </div>
-              <% end %>
-            </div>
-          <% end %>
-        </article>
-      <% end %>
+    <section class="rounded-3xl border border-dark-border bg-dark-surface/80 p-6 mb-6">
+      <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p class="text-xs uppercase tracking-[0.16em] text-dark-text-muted">Score snapshot</p>
+          <h2 class="text-2xl font-semibold text-white mt-1">Nine Currents</h2>
+        </div>
+        <p class="max-w-xl text-sm leading-6 text-dark-text-muted">
+          A compact view of the current scores. Confidence reflects how much evidence supports each score.
+        </p>
+      </div>
+
+      <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <% @report.ordered_currents.each do |current| %>
+          <% score = current["score"] || current[:score] %>
+          <% signals = Array(current["signals"] || current[:signals]) %>
+          <% raw_confidence = (current["confidence"] || current[:confidence]).to_s.downcase %>
+          <% confidence = %w[low medium high].include?(raw_confidence) ? raw_confidence : (signals.size >= 3 ? "high" : signals.size >= 2 ? "medium" : "low") %>
+          <% confidence_class = case confidence
+             when "high" then "bg-emerald-500/10 text-emerald-300"
+             when "medium" then "bg-amber-500/10 text-amber-300"
+             else "bg-dark-bg/80 text-dark-text-muted"
+             end %>
+          <article class="flex items-center justify-between gap-3 rounded-2xl border border-dark-border bg-dark-bg/50 px-4 py-3">
+            <h3 class="text-sm font-semibold text-white"><%= current["name"] || current[:name] %></h3>
+            <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium <%= confidence_class %>">
+              <%= score.present? ? "#{score}/10" : "No score" %> &middot; <%= confidence.humanize %> confidence
+            </span>
+          </article>
+        <% end %>
+      </div>
     </section>
 
     <section class="rounded-3xl border border-dark-border bg-dark-surface/80 p-6">

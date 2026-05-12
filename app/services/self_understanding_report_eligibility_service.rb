@@ -14,6 +14,10 @@ class SelfUnderstandingReportEligibilityService
   RECENT_MESSAGE_LIMIT = 24
   RECENT_SAVED_LIMIT = 12
   RECENT_AUTHORED_LIMIT = 10
+  DIGEST_IGNORED_KEYS = %w[
+    account_age_days
+    last_synced_at
+  ].freeze
 
   def initialize(user:)
     @user = user
@@ -22,7 +26,7 @@ class SelfUnderstandingReportEligibilityService
   def evaluate
     latest_report = @user.latest_self_understanding_report
     snapshot = build_source_snapshot
-    digest = Digest::SHA256.hexdigest(JSON.generate(snapshot))
+    digest = source_digest_for(snapshot)
 
     Result.new(
       should_generate?: should_generate?(latest_report, snapshot, digest),
@@ -41,16 +45,40 @@ class SelfUnderstandingReportEligibilityService
     return false unless meaningful_signal?(snapshot)
     return true if latest_report.blank?
 
-    latest_report.source_digest != digest
+    !latest_report_matches_digest?(latest_report, digest)
   end
 
   def generation_reason(latest_report, snapshot, digest)
     return "not_in_life_mode" unless @user.life?
     return "insufficient_signal" unless meaningful_signal?(snapshot)
     return "first_report" if latest_report.blank?
-    return "unchanged" if latest_report.source_digest == digest
+    return "unchanged" if latest_report_matches_digest?(latest_report, digest)
 
     "new_signal"
+  end
+
+  def latest_report_matches_digest?(latest_report, digest)
+    latest_report.source_digest == digest ||
+      (latest_report.source_snapshot.present? && source_digest_for(latest_report.source_snapshot) == digest)
+  end
+
+  def source_digest_for(snapshot)
+    Digest::SHA256.hexdigest(JSON.generate(stable_source_snapshot(snapshot)))
+  end
+
+  def stable_source_snapshot(value)
+    case value
+    when Hash
+      value.sort_by { |key, _child| key.to_s }.each_with_object({}) do |(key, child), stable|
+        next if DIGEST_IGNORED_KEYS.include?(key.to_s)
+
+        stable[key.to_s] = stable_source_snapshot(child)
+      end
+    when Array
+      value.map { |child| stable_source_snapshot(child) }
+    else
+      value
+    end
   end
 
   def meaningful_signal?(snapshot)

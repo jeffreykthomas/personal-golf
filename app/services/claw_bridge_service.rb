@@ -250,11 +250,25 @@ class ClawBridgeService
     answer = context["persona_answer"] || context[:persona_answer]
     return nil unless answer.is_a?(Hash)
 
+    kind = (answer["kind"] || answer[:kind]).to_s
+    dilemma_id = (answer["dilemma_id"] || answer[:dilemma_id]).to_s
     slot_key = (answer["slot"] || answer[:slot]).to_s
-    return nil if slot_key.blank?
+
+    inferred_kind = if kind.present?
+      kind
+    elsif dilemma_id.present?
+      "persona_dilemma"
+    elsif slot_key.present?
+      "persona_question"
+    end
+
+    return nil if inferred_kind.blank?
 
     {
+      "kind" => inferred_kind,
       "slot" => slot_key,
+      "dilemma_id" => dilemma_id,
+      "option_id" => (answer["option_id"] || answer[:option_id]).to_s,
       "value" => answer["value"] || answer[:value],
       "freeform" => answer["freeform"] || answer[:freeform],
       "skipped" => ActiveModel::Type::Boolean.new.cast(answer["skipped"] || answer[:skipped])
@@ -262,8 +276,37 @@ class ClawBridgeService
   end
 
   def handle_persona_answer(persona_context)
+    case persona_context["kind"]
+    when "persona_dilemma"
+      handle_dilemma_answer(persona_context)
+    when "persona_question"
+      handle_inventory_answer(persona_context)
+    end
+  end
+
+  def handle_dilemma_answer(persona_context)
+    dilemma_id = persona_context["dilemma_id"]
+    return nil if dilemma_id.blank?
+
+    service = dilemma_service
+    if persona_context["skipped"]
+      dilemma = service.record_skip!(dilemma_id)
+      return dilemma ? "Got it — I'll set that one aside for now." : nil
+    end
+
+    result = service.record_answer!(
+      dilemma_id,
+      option_id: persona_context["option_id"],
+      freeform: persona_context["freeform"]
+    )
+    return nil unless result
+
+    service.acknowledgement_for(dilemma: result[:dilemma], option: result[:option])
+  end
+
+  def handle_inventory_answer(persona_context)
     slot_key = persona_context["slot"]
-    return nil unless slot_key
+    return nil if slot_key.blank?
 
     service = persona_service
     if persona_context["skipped"]
@@ -301,13 +344,14 @@ class ClawBridgeService
     end
 
     if response[:prompt].nil? && actions_allow_prompt?(response[:actions]) && persona_prompts_allowed_for_session?
-      service = persona_service
-      if service.should_offer_inline_question?
-        slot_payload = service.next_prompt_payload
-        if slot_payload
-          response[:prompt] = persona_prompt_payload(slot_payload)
-          intro = persona_intro_text(slot_payload, has_existing_text: text.present?)
-          text = [ text, intro, slot_payload[:question] ].reject(&:blank?).join("\n\n")
+      orchestrator = persona_orchestrator
+      if orchestrator.should_offer_prompt?
+        prompt_payload = orchestrator.next_payload
+        if prompt_payload
+          response[:prompt] = prompt_payload
+          intro = persona_intro_text(prompt_payload, has_existing_text: text.present?)
+          question_text = prompt_question_text(prompt_payload)
+          text = [ text, intro, question_text ].reject(&:blank?).join("\n\n")
         end
       end
     end
@@ -322,33 +366,38 @@ class ClawBridgeService
     Array(actions).none? { |action| action[:type] == "complete_onboarding" || action["type"] == "complete_onboarding" }
   end
 
-  def persona_intro_text(slot_payload, has_existing_text:)
-    label = slot_payload[:label].to_s.downcase
-    if has_existing_text
-      "While we're here, I'd love to capture your #{label} so I can coach you better."
+  def persona_intro_text(prompt_payload, has_existing_text:)
+    if prompt_payload[:kind] == "persona_dilemma"
+      lead = has_existing_text ? "Quick scenario for you" : "Try this one with me"
+      "#{lead} — it helps me get a real sense of how you weigh things."
     else
-      "Quick check on your #{label} — it helps me coach you better."
+      label = prompt_payload[:label].to_s.downcase
+      if has_existing_text
+        "While we're here, I'd love to capture your #{label} so I can coach you better."
+      else
+        "Quick check on your #{label} — it helps me coach you better."
+      end
     end
   end
 
-  def persona_prompt_payload(slot_payload)
-    {
-      kind: "persona_question",
-      slot: slot_payload[:slot],
-      group: slot_payload[:group],
-      label: slot_payload[:label],
-      question: slot_payload[:question],
-      short_prompt: slot_payload[:short_prompt],
-      options: slot_payload[:options],
-      multi_select: slot_payload[:multi_select],
-      allow_freeform: slot_payload[:allow_freeform],
-      max_options: slot_payload[:max_options],
-      allow_skip: true
-    }
+  def prompt_question_text(prompt_payload)
+    if prompt_payload[:kind] == "persona_dilemma"
+      [ prompt_payload[:scenario], prompt_payload[:short_prompt] ].compact.reject(&:blank?).join("\n\n")
+    else
+      prompt_payload[:question]
+    end
   end
 
   def persona_service
     @persona_service ||= PersonaQuestionService.new(user: @user, coach_session: @coach_session)
+  end
+
+  def dilemma_service
+    @dilemma_service ||= PersonaDilemmaService.new(user: @user, coach_session: @coach_session)
+  end
+
+  def persona_orchestrator
+    @persona_orchestrator ||= PersonaPromptOrchestrator.new(user: @user, coach_session: @coach_session)
   end
 
   def persona_prompts_allowed_for_session?

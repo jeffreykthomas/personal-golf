@@ -21,13 +21,16 @@ class ClawBridgeService
   end
 
   def respond_to(message:, context: {})
-    sibling_result = call_sibling_service(message: message, context: context)
-    return sibling_result if sibling_result.present?
+    persona_context = extract_persona_context(context)
+    persona_ack = handle_persona_answer(persona_context) if persona_context
 
-    local_fallback_response(message: message, context: context)
+    sibling_result = call_sibling_service(message: message, context: context)
+    response = sibling_result.presence || local_fallback_response(message: message, context: context)
+
+    decorate_with_persona_prompt(response, persona_ack: persona_ack)
   rescue StandardError => e
     Rails.logger.error("ClawBridgeService failed request_id=#{@request_id}: #{e.class} #{e.message}")
-    local_fallback_response(message: message, context: context)
+    decorate_with_persona_prompt(local_fallback_response(message: message, context: context))
   end
 
   private
@@ -218,11 +221,17 @@ class ClawBridgeService
   end
 
   def context_aware_reply(context)
-    if context.is_a?(Hash) && context["hole_number"].present?
+    if life_mode_user?
+      "I'm here to help — share what's on your mind, or use one of the quick options to fill me in."
+    elsif context.is_a?(Hash) && context["hole_number"].present?
       "On this hole, play to your safest miss and prioritize center-green outcomes unless you have a clear scoring opportunity."
     else
       "I can help with prep, in-round decisions, or a post-round debrief. Ask for a tip and I can add it directly to your collection."
     end
+  end
+
+  def life_mode_user?
+    @user.respond_to?(:life?) && @user.life?
   end
 
   def normalize_response(body, source:)
@@ -230,8 +239,123 @@ class ClawBridgeService
       text: body["text"].to_s,
       actions: normalize_actions(body["actions"]),
       profile_updates: body["profileUpdates"].is_a?(Hash) ? body["profileUpdates"] : {},
-      source: source
+      source: source,
+      prompt: nil
     }
+  end
+
+  def extract_persona_context(context)
+    return nil unless context.is_a?(Hash)
+
+    answer = context["persona_answer"] || context[:persona_answer]
+    return nil unless answer.is_a?(Hash)
+
+    slot_key = (answer["slot"] || answer[:slot]).to_s
+    return nil if slot_key.blank?
+
+    {
+      "slot" => slot_key,
+      "value" => answer["value"] || answer[:value],
+      "freeform" => answer["freeform"] || answer[:freeform],
+      "skipped" => ActiveModel::Type::Boolean.new.cast(answer["skipped"] || answer[:skipped])
+    }
+  end
+
+  def handle_persona_answer(persona_context)
+    slot_key = persona_context["slot"]
+    return nil unless slot_key
+
+    service = persona_service
+    if persona_context["skipped"]
+      service.record_skip!(slot_key)
+      slot = PersonaInventory.find(slot_key)
+      return slot ? "Got it — I'll skip the #{slot.label.downcase} question for now." : nil
+    end
+
+    entry = service.record_answer!(
+      slot_key,
+      value: persona_context["value"],
+      freeform: persona_context["freeform"]
+    )
+    return nil unless entry
+
+    summary = service.slot_summary_text(slot_key)
+    slot = PersonaInventory.find(slot_key)
+    return nil unless slot
+
+    if summary.present?
+      "Saved that — #{slot.label.downcase}: #{summary}."
+    else
+      "Saved that — #{slot.label.downcase}."
+    end
+  end
+
+  def decorate_with_persona_prompt(response, persona_ack: nil)
+    response = response.dup
+    response[:source] ||= "local_fallback"
+
+    text = response[:text].to_s
+
+    if persona_ack.present?
+      text = [ persona_ack, text ].compact.reject(&:blank?).join("\n\n")
+    end
+
+    if response[:prompt].nil? && actions_allow_prompt?(response[:actions]) && persona_prompts_allowed_for_session?
+      service = persona_service
+      if service.should_offer_inline_question?
+        slot_payload = service.next_prompt_payload
+        if slot_payload
+          response[:prompt] = persona_prompt_payload(slot_payload)
+          intro = persona_intro_text(slot_payload, has_existing_text: text.present?)
+          text = [ text, intro, slot_payload[:question] ].reject(&:blank?).join("\n\n")
+        end
+      end
+    end
+
+    response[:text] = text
+    response
+  end
+
+  def actions_allow_prompt?(actions)
+    return true if actions.blank?
+
+    Array(actions).none? { |action| action[:type] == "complete_onboarding" || action["type"] == "complete_onboarding" }
+  end
+
+  def persona_intro_text(slot_payload, has_existing_text:)
+    label = slot_payload[:label].to_s.downcase
+    if has_existing_text
+      "While we're here, I'd love to capture your #{label} so I can coach you better."
+    else
+      "Quick check on your #{label} — it helps me coach you better."
+    end
+  end
+
+  def persona_prompt_payload(slot_payload)
+    {
+      kind: "persona_question",
+      slot: slot_payload[:slot],
+      group: slot_payload[:group],
+      label: slot_payload[:label],
+      question: slot_payload[:question],
+      short_prompt: slot_payload[:short_prompt],
+      options: slot_payload[:options],
+      multi_select: slot_payload[:multi_select],
+      allow_freeform: slot_payload[:allow_freeform],
+      max_options: slot_payload[:max_options],
+      allow_skip: true
+    }
+  end
+
+  def persona_service
+    @persona_service ||= PersonaQuestionService.new(user: @user, coach_session: @coach_session)
+  end
+
+  def persona_prompts_allowed_for_session?
+    return false unless @coach_session
+    return false if @coach_session.respond_to?(:onboarding?) && @coach_session.onboarding?
+
+    true
   end
 
   def normalize_actions(raw_actions)

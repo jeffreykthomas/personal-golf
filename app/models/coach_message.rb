@@ -15,7 +15,7 @@ class CoachMessage < ApplicationRecord
   after_create_commit :touch_session_activity
 
   def as_payload
-    {
+    payload = {
       id: id,
       role: role,
       modality: modality,
@@ -24,6 +24,11 @@ class CoachMessage < ApplicationRecord
       metadata: metadata || {},
       created_at: created_at&.iso8601
     }
+
+    prompt = (metadata.is_a?(Hash) ? metadata["prompt"] : nil)
+    payload[:prompt] = prompt if prompt.is_a?(Hash) && prompt.any?
+
+    payload
   end
 
   private

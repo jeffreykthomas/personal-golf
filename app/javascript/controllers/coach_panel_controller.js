@@ -44,6 +44,7 @@ export default class extends Controller {
     this.completedRequestIds = new Set();
     this.lastDeltaSequenceByRequestId = new Map();
     this.latestTipId = null;
+    this.activePromptCardSlot = null;
 
     this.renderStatus("");
     this.autoGrowInput();
@@ -154,18 +155,267 @@ export default class extends Controller {
     const spacer = this.messagesTarget.firstElementChild;
     this.messagesTarget.innerHTML = "";
     if (spacer) this.messagesTarget.appendChild(spacer);
-    messages.forEach((message) => this.appendMessageBubble(message.role, message.content));
+    this.activePromptCardSlot = null;
+    messages.forEach((message) => {
+      this.appendMessageBubble(message.role, message.content);
+      if (message.role === "assistant" && message.prompt) {
+        this.renderInlinePromptCard(message.prompt, { isLatest: false });
+      }
+    });
     this.scrollMessagesToBottom();
   }
 
   appendMessageBubble(role, content) {
     const bubble = document.createElement("div");
     bubble.className = role === "user"
-      ? "ml-auto max-w-[85%] rounded-2xl bg-accent-500 px-4 py-2.5 text-sm text-white"
-      : "max-w-[85%] rounded-2xl bg-dark-surface border border-dark-border px-4 py-2.5 text-sm text-dark-text";
+      ? "ml-auto max-w-[85%] rounded-2xl bg-accent-500 px-4 py-2.5 text-sm text-white whitespace-pre-wrap"
+      : "max-w-[85%] rounded-2xl bg-dark-surface border border-dark-border px-4 py-2.5 text-sm text-dark-text whitespace-pre-wrap";
     bubble.textContent = content;
     this.appendToMessages(bubble);
     return bubble;
+  }
+
+  renderInlinePromptCard(prompt, { isLatest = true } = {}) {
+    if (!prompt || prompt.kind !== "persona_question") {
+      return null;
+    }
+
+    if (this.activePromptCardSlot && this.activePromptCardSlot.element?.isConnected) {
+      this.disablePromptCard(this.activePromptCardSlot.element, "Replaced by a newer question");
+    }
+
+    const isMulti = !!prompt.multi_select;
+    const card = document.createElement("div");
+    card.className = "max-w-[92%] rounded-2xl border border-dark-border bg-dark-surface/70 px-4 py-3 mt-1 space-y-3";
+    card.dataset.personaSlot = prompt.slot || "";
+
+    const header = document.createElement("div");
+    header.className = "flex items-center justify-between gap-2";
+
+    const label = document.createElement("p");
+    label.className = "text-[11px] uppercase tracking-wide text-accent-400 font-semibold";
+    label.textContent = prompt.label || "Quick question";
+
+    const hint = document.createElement("p");
+    hint.className = "text-[11px] text-dark-text-muted";
+    hint.textContent = isMulti
+      ? `Pick up to ${prompt.max_options || prompt.options?.length || 3}`
+      : "Pick one";
+    header.append(label, hint);
+
+    const question = document.createElement("p");
+    question.className = "text-sm text-dark-text leading-snug";
+    question.textContent = prompt.short_prompt || prompt.question || "";
+
+    const chipsRow = document.createElement("div");
+    chipsRow.className = "flex flex-wrap gap-2";
+    const selected = new Set();
+    const chipButtons = [];
+
+    (prompt.options || []).forEach((option) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.dataset.value = option;
+      chip.className = this.personaChipClass(false);
+      chip.textContent = option;
+      chip.style.minHeight = "44px";
+      chip.addEventListener("click", () => {
+        if (card.dataset.disabled === "true") return;
+        if (isMulti) {
+          if (selected.has(option)) {
+            selected.delete(option);
+          } else {
+            const max = prompt.max_options || prompt.options?.length || 3;
+            if (selected.size >= max) {
+              const oldest = selected.values().next().value;
+              selected.delete(oldest);
+              const oldChip = chipButtons.find((b) => b.dataset.value === oldest);
+              if (oldChip) oldChip.className = this.personaChipClass(false);
+            }
+            selected.add(option);
+          }
+          chip.className = this.personaChipClass(selected.has(option));
+          submitButton.disabled = selected.size === 0 && !freeformInput.value.trim();
+        } else {
+          this.submitPersonaAnswer(prompt, [option], freeformInput.value.trim(), card);
+        }
+      });
+      chipsRow.appendChild(chip);
+      chipButtons.push(chip);
+    });
+
+    const freeformWrap = document.createElement("div");
+    freeformWrap.className = prompt.allow_freeform ? "flex flex-col gap-2" : "hidden";
+    const freeformInput = document.createElement("input");
+    freeformInput.type = "text";
+    freeformInput.placeholder = "Or type your own…";
+    freeformInput.className = "w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-dark-text placeholder-dark-text-muted focus-ring";
+    freeformInput.addEventListener("input", () => {
+      submitButton.disabled = !isMulti
+        ? !freeformInput.value.trim()
+        : selected.size === 0 && !freeformInput.value.trim();
+    });
+    freeformInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        const text = freeformInput.value.trim();
+        if (!text && (!isMulti || selected.size === 0)) return;
+        this.submitPersonaAnswer(prompt, Array.from(selected), text, card);
+      }
+    });
+    freeformWrap.appendChild(freeformInput);
+
+    const actionsRow = document.createElement("div");
+    actionsRow.className = "flex items-center justify-between gap-2 pt-1";
+
+    const skipButton = document.createElement("button");
+    skipButton.type = "button";
+    skipButton.className = "text-xs text-dark-text-muted hover:text-white transition-colors";
+    skipButton.textContent = "Skip for now";
+    skipButton.style.minHeight = "44px";
+    skipButton.addEventListener("click", () => {
+      if (card.dataset.disabled === "true") return;
+      this.submitPersonaSkip(prompt, card);
+    });
+
+    const submitButton = document.createElement("button");
+    submitButton.type = "button";
+    submitButton.className = "px-3 py-1.5 rounded-full bg-accent-500 text-white text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed";
+    submitButton.textContent = isMulti ? "Save selections" : "Send";
+    submitButton.style.minHeight = "44px";
+    submitButton.disabled = true;
+    if (!isMulti && !prompt.allow_freeform) {
+      submitButton.classList.add("hidden");
+    }
+    submitButton.addEventListener("click", () => {
+      if (card.dataset.disabled === "true") return;
+      const text = freeformInput.value.trim();
+      const values = Array.from(selected);
+      if (values.length === 0 && !text) return;
+      this.submitPersonaAnswer(prompt, values, text, card);
+    });
+
+    actionsRow.append(skipButton, submitButton);
+
+    card.append(header, question, chipsRow);
+    if (prompt.allow_freeform) card.append(freeformWrap);
+    card.append(actionsRow);
+
+    this.appendToMessages(card);
+    if (isLatest) {
+      this.activePromptCardSlot = { slot: prompt.slot, element: card };
+    }
+    return card;
+  }
+
+  personaChipClass(active) {
+    const base = "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors";
+    return active
+      ? `${base} bg-accent-500 border-accent-500 text-white`
+      : `${base} bg-dark-bg/40 border-dark-border text-dark-text hover:bg-dark-bg/80`;
+  }
+
+  disablePromptCard(card, reason) {
+    if (!card) return;
+    card.dataset.disabled = "true";
+    card.classList.add("opacity-50", "pointer-events-none");
+    card.querySelectorAll("button, input").forEach((el) => {
+      el.disabled = true;
+    });
+    if (reason) {
+      const note = document.createElement("p");
+      note.className = "text-[11px] text-dark-text-muted italic";
+      note.textContent = reason;
+      card.appendChild(note);
+    }
+  }
+
+  async submitPersonaAnswer(prompt, values, freeform, cardElement) {
+    const cleanValues = (values || []).filter((v) => v && v.trim());
+    const cleanFreeform = (freeform || "").trim();
+    if (cleanValues.length === 0 && !cleanFreeform) return;
+
+    const summaryParts = [];
+    if (cleanValues.length > 0) summaryParts.push(cleanValues.join(", "));
+    if (cleanFreeform) summaryParts.push(cleanFreeform);
+    const summary = summaryParts.join(" — ");
+
+    this.disablePromptCard(cardElement, `You shared: ${summary}`);
+    if (this.activePromptCardSlot?.element === cardElement) {
+      this.activePromptCardSlot = null;
+    }
+
+    await this.dispatchCoachMessage(summary, {
+      persona_answer: {
+        slot: prompt.slot,
+        value: cleanValues,
+        freeform: cleanFreeform || null,
+        skipped: false,
+      },
+    });
+  }
+
+  async submitPersonaSkip(prompt, cardElement) {
+    this.disablePromptCard(cardElement, "Skipped for now");
+    if (this.activePromptCardSlot?.element === cardElement) {
+      this.activePromptCardSlot = null;
+    }
+    await this.dispatchCoachMessage(`Skip — ${prompt.label || "this question"}`, {
+      persona_answer: {
+        slot: prompt.slot,
+        skipped: true,
+      },
+    });
+  }
+
+  async dispatchCoachMessage(content, extraContext = {}) {
+    await this.ensureSession();
+    if (!this.sessionId) return;
+    await this.waitForSubscriptionReady();
+
+    const requestId = this.createRequestId();
+    this.requestIdsWithStreamEvents.delete(requestId);
+    this.completedRequestIds.delete(requestId);
+    this.lastDeltaSequenceByRequestId.delete(requestId);
+
+    this.appendMessageBubble("user", content);
+    this.scrollMessagesToBottom();
+    this.renderStatus("Coach is thinking...");
+
+    const baseContext = this.contextValue || {};
+    const mergedContext = { ...baseContext, ...extraContext };
+
+    const response = await fetch(`/coach_sessions/${this.sessionId}/coach_messages`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken(),
+      },
+      body: JSON.stringify({
+        request_id: requestId,
+        context: mergedContext,
+        coach_message: {
+          content,
+          modality: "text",
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      this.renderStatus("Coach message failed. Try again.");
+      return;
+    }
+
+    const payload = await response.json();
+    const streamed = this.requestIdsWithStreamEvents.has(requestId) || this.completedRequestIds.has(requestId);
+    if (!streamed && payload.message) {
+      this.appendMessageBubble("assistant", payload.message.content);
+      if (payload.message.prompt || payload.prompt) {
+        this.renderInlinePromptCard(payload.message.prompt || payload.prompt);
+      }
+      this.handleActions(payload.actions || []);
+      this.renderStatus("");
+    }
   }
 
   async sendMessage(event) {
@@ -221,6 +471,9 @@ export default class extends Controller {
     const streamed = this.requestIdsWithStreamEvents.has(requestId) || this.completedRequestIds.has(requestId);
     if (!streamed && payload.message) {
       this.appendMessageBubble("assistant", payload.message.content);
+      if (payload.message.prompt || payload.prompt) {
+        this.renderInlinePromptCard(payload.message.prompt || payload.prompt);
+      }
       this.handleActions(payload.actions || []);
       this.renderStatus("");
     }
@@ -276,6 +529,9 @@ export default class extends Controller {
           completedBubble.textContent = data.message.content;
         }
         this.streamingBubbleByRequestId.delete(requestId);
+        if (data.message?.prompt) {
+          this.renderInlinePromptCard(data.message.prompt);
+        }
         this.handleActions(data.actions || []);
         this.renderStatus("");
         this.scrollMessagesToBottom();
